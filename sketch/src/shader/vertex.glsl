@@ -1,0 +1,24 @@
+#include lib/common;
+
+uniform mat4 projectionMatrix;
+uniform mat4 viewMatrix;
+uniform mat4 modelMatrix;
+
+attribute vec3 position;
+attribute vec2 uv;
+
+varying vec2 vUv;
+
+void main() {
+    vec4 modelPosition = modelMatrix * vec4(position, 1.0);
+    modelPosition.x += noise(modelPosition.z) * 0.6;
+    modelPosition.y += noise(modelPosition.x) * 0.6;
+    modelPosition.z += noise(modelPosition.y) * 0.6;
+
+    vec4 viewPosition = viewMatrix * modelPosition;
+    vec4 projectedPosition = projectionMatrix * viewPosition;
+
+    gl_Position = projectedPosition;
+
+    vUv = uv;
+}

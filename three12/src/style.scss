@@ -1,0 +1,42 @@
+@import 'destyle.css';
+
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.4;
+  font-weight: 400;
+  font-size: 16px;
+}
+
+body, html, .canvas{
+  box-sizing: border-box;
+  overflow: hidden;
+  min-width: 100vw;
+  min-height: 100vh;
+  min-width: 100dvw;
+  min-height: 100dvh;
+}
+
+.canvas{
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 0;
+}
+
+.main{
+  pointer-events: none;
+  position: relative;
+  min-width: 100vw;
+  min-height: 100vh;
+  min-width: 100dvw;
+  min-height: 100dvh;
+}
+
+.pointer{
+  &--none{
+    pointer-events: none;
+  }
+  &-auto{
+    pointer-events: auto;
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "name": "three00",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "deploy": "vercel --prod"
+  },
+  "devDependencies": {
+    "sass": "^1.89.2",
+    "vercel": "^46.0.2",
+    "vite": "^7.0.4",
+    "vite-plugin-glsl": "^1.3.1"
+  },
+  "dependencies": {
+    "destyle.css": "^4.0.1",
+    "emittery": "^1.2.0",
+    "gsap": "3.12",
+    "lil-gui": "^0.20.0",
+    "three": "^0.179.1"
+  }
+}
