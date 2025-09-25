@@ -2,6 +2,7 @@ import Emittery from 'emittery'
 import * as THREE from 'three'
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js'
 import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js'
+const {clamp} = THREE.MathUtils
   
 /**
  * ticker
@@ -455,7 +456,7 @@ export class AssetLoader {
     this.mustLoaded = true
     this.mustAssetsPromise = Object.keys(this.assets)
       .filter(key => this.assets[key].must)
-      .map(key => this.__load(this.assets[key]))
+      .map(key => this.__load(key))
     
     if (!this.mustAssetsPromise.length) return Promise.resolve();
     return Promise.all(this.mustAssetsPromise)
@@ -466,20 +467,20 @@ export class AssetLoader {
     
     this.allAssetsPromise = Object.keys(this.assets)
       .filter(key => !this.assets[key].must)
-      .map(key => this.__load(this.assets[key]))
+      .map(key => this.__load(key))
     
     if (!this.allAssetsPromise.length) return Promise.resolve();
     return Promise.all(this.allAssetsPromise)
   }
 
-  __load(asset) {
-    const url = asset.url
-    const type = asset.type.toUpperCase()
+  __load(key) {
+    const url = this.assets[key].url
+    const type = this.assets[key].type
     let loader = null
 
     if (!url) return Promise.resolve();
       
-    switch(type) {
+    switch(type.toUpperCase()) {
       case 'TEXTURE':
         loader = this.textureLoader
         break
@@ -496,9 +497,8 @@ export class AssetLoader {
     return new Promise((resolve, reject) => {
       loader.load(url,
         data => {
-          asset.data = data
-          asset.loaded = true
-          resolve(asset)
+          this.assets[key] = data
+          resolve(data)
         },
         null,
         () => {

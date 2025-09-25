@@ -47,7 +47,7 @@ export default class App extends Xapp {
   allAssetsLoadedTime = -1
   mustAssetsLoadingProgress = 0
   
-  OPENING_ANIMATION_DURATION = 1500
+  OPENING_ANIMATION_DURATION = 0
   PIXELRATIO = 2
   DRAWINGBUFFER = false
 
@@ -55,13 +55,6 @@ export default class App extends Xapp {
     super()
     if (parser.getDevice().type) {
       this.deviceType = parser.getDevice().type
-    }
-    /**
-     * ========= assets setting =========
-     */
-    this.assets = {
-      bakedshadow: { url: '/textures/bakedShadow.jpg',type:'TEXTURE', must:true},
-      simpleShadow: { url: '/textures/simpleShadow.jpg',type:'TEXTURE', must:true},
     }
   
     /**
@@ -102,7 +95,7 @@ export default class App extends Xapp {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, this.PIXELRATIO))
     this.renderer.setSize(this.width, this.height, false)
     this.renderer.outputColorSpace = THREE.SRGBColorSpace
-    this.renderer.shadowMap.enabled = false
+    this.renderer.shadowMap.enabled = true
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap
       // this.renderer.toneMapping = THREE.ACESFilmicToneMapping
     
@@ -166,6 +159,42 @@ export default class App extends Xapp {
     this.controls.enableDamping = true
 
     /**
+     * ========= assets setting =========
+     */
+    this.assets = {
+      // floor
+      floorAlphaTexture: { url: '/textures/floor/alpha.jpg',type:'TEXTURE', must:true},
+      floorARMTexture: { url: '/textures/floor/coast_sand_rocks_02_1k/coast_sand_rocks_02_arm_1k.jpg',type:'TEXTURE', must:true},
+      floorColorTexture: { url: '/textures/floor/coast_sand_rocks_02_1k/coast_sand_rocks_02_diff_1k.jpg',type:'TEXTURE', must:true},
+      floorDisplacementTexture: { url: '/textures/floor/coast_sand_rocks_02_1k/coast_sand_rocks_02_disp_1k.jpg',type:'TEXTURE', must:true},
+      floorNormalTexture: { url: '/textures/floor/coast_sand_rocks_02_1k/coast_sand_rocks_02_nor_gl_1k.png', type: 'TEXTURE', must: true },
+      // wall
+      wallARMTexture: { url: '/textures/wall/castle_brick_broken_06_1k/castle_brick_broken_06_arm_1k.jpg',type:'TEXTURE', must:true},
+      wallColorTexture: { url: '/textures/wall/castle_brick_broken_06_1k/castle_brick_broken_06_diff_1k.jpg',type:'TEXTURE', must:true},
+      wallNormalTexture: { url: '/textures/wall/castle_brick_broken_06_1k/castle_brick_broken_06_nor_gl_1k.png', type: 'TEXTURE', must: true },
+      // root
+      roofARMTexture: { url: '/textures/roof/roof_slates_02_1k/roof_slates_02_arm_1k.jpg',type:'TEXTURE', must:true},
+      roofColorTexture: { url: '/textures/roof/roof_slates_02_1k/roof_slates_02_diff_1k.jpg',type:'TEXTURE', must:true},
+      roofNormalTexture: { url: '/textures/roof/roof_slates_02_1k/roof_slates_02_nor_gl_1k.png', type: 'TEXTURE', must: true },
+      // bush
+      bushARMTexture: { url: '/textures/bush/leaves_forest_ground_1k/leaves_forest_ground_arm_1k.jpg',type:'TEXTURE', must:true},
+      bushColorTexture: { url: '/textures/bush/leaves_forest_ground_1k/leaves_forest_ground_diff_1k.jpg',type:'TEXTURE', must:true},
+      bushNormalTexture: { url: '/textures/bush/leaves_forest_ground_1k/leaves_forest_ground_nor_gl_1k.png', type: 'TEXTURE', must: true },
+      // grave
+      graveARMTexture: { url: '/textures/grave/plastered_stone_wall_1k/plastered_stone_wall_arm_1k.jpg',type:'TEXTURE', must:true},
+      graveColorTexture: { url: '/textures/grave/plastered_stone_wall_1k/plastered_stone_wall_diff_1k.jpg',type:'TEXTURE', must:true},
+      graveNormalTexture: { url: '/textures/grave/plastered_stone_wall_1k/plastered_stone_wall_nor_gl_1k.png', type: 'TEXTURE', must: true },
+      // door
+      doorAlphaTexture:{ url: '/textures/door/alpha.jpg',type:'TEXTURE', must:true},
+      doorColorTexture:{ url: '/textures/door/color.jpg',type:'TEXTURE', must:true},
+      doorAmbientOcclusionTexture:{ url: '/textures/door/ambientOcclusion.jpg',type:'TEXTURE', must:true},
+      doorRoughnessTexture: { url: '/textures/door/roughness.jpg', type: 'TEXTURE', must: true },
+      doorMetalnessTexture: { url: '/textures/door/metalness.jpg', type: 'TEXTURE', must: true },
+      doorHeightTexture:{ url: '/textures/door/height.jpg',type:'TEXTURE', must:true},
+      doorNormalTexture:{ url: '/textures/door/normal.jpg',type:'TEXTURE', must:true},
+    }
+
+    /**
      * ========= loader =========
      */
     const loader = new AssetLoader(this.assets)
@@ -184,21 +213,88 @@ export default class App extends Xapp {
     this.isMustAssetsLoaded = true
 
     /**
-     * ========= texture =========
+     * ========= Texture =========
      */
-    const bakedShadow = this.assets.bakedshadow.data
-    const simpleShadow = this.assets.simpleShadow.data
-    bakedShadow.colorSpace = THREE.SRGBColorSpace
-    simpleShadow.colorSpace = THREE.SRGBColorSpace
+    const {
+      // floor
+      floorAlphaTexture,
+      floorColorTexture,
+      floorARMTexture,
+      floorDisplacementTexture,
+      floorNormalTexture,
+      // wall
+      wallARMTexture,
+      wallColorTexture,
+      wallNormalTexture,
+      // roof
+      roofARMTexture,
+      roofColorTexture,
+      roofNormalTexture,
+      // bush
+      bushARMTexture,
+      bushColorTexture,
+      bushNormalTexture,
+      // grave
+      graveARMTexture,
+      graveColorTexture,
+      graveNormalTexture,
+      // door
+      doorColorTexture,
+      doorAlphaTexture,
+      doorAmbientOcclusionTexture,
+      doorRoughnessTexture,
+      doorMetalnessTexture,
+      doorHeightTexture,
+      doorNormalTexture
+    } = this.assets
+
+    floorColorTexture.colorSpace = THREE.SRGBColorSpace
+    wallColorTexture.colorSpace = THREE.SRGBColorSpace
+    roofColorTexture.colorSpace = THREE.SRGBColorSpace
+    bushColorTexture.colorSpace = THREE.SRGBColorSpace
+    doorColorTexture.colorSpace = THREE.SRGBColorSpace
     
+    floorColorTexture.repeat.set(8,8)
+    floorARMTexture.repeat.set(8,8)
+    floorDisplacementTexture.repeat.set(8,8)
+    floorNormalTexture.repeat.set(8, 8)
+    
+    floorColorTexture.wrapS = THREE.RepeatWrapping
+    floorARMTexture.wrapS = THREE.RepeatWrapping
+    floorDisplacementTexture.wrapS = THREE.RepeatWrapping
+    floorNormalTexture.wrapS = THREE.RepeatWrapping
+
+    floorColorTexture.wrapT = THREE.RepeatWrapping
+    floorARMTexture.wrapT = THREE.RepeatWrapping
+    floorDisplacementTexture.wrapT = THREE.RepeatWrapping
+    floorNormalTexture.wrapT = THREE.RepeatWrapping
+
+    roofARMTexture.repeat.set(3,1)
+    roofColorTexture.repeat.set(3,1)
+    roofNormalTexture.repeat.set(3,1)
+    
+    roofARMTexture.wrapS = THREE.RepeatWrapping
+    roofColorTexture.wrapS = THREE.RepeatWrapping
+    roofNormalTexture.wrapS = THREE.RepeatWrapping
     /**
      * ========= object =========
      */
 
     // floor
     const floor = new THREE.Mesh(
-      new THREE.PlaneGeometry(20, 20),
-      new THREE.MeshStandardMaterial()
+      new THREE.PlaneGeometry(20, 20, 100, 100),
+      new THREE.MeshStandardMaterial({
+        // wireframe:true,
+        alphaMap: floorAlphaTexture,
+        transparent: true,
+        map: floorColorTexture,
+        aoMap: floorARMTexture,
+        roughnessMap: floorARMTexture,
+        metalnessMap: floorARMTexture,
+        normalMap: floorNormalTexture,
+        displacementMap: floorDisplacementTexture,
+        displacementScale:0.1
+      })
     )
     floor.rotation.x = Math.PI * -0.5
     this.scene.add(floor)
@@ -210,7 +306,13 @@ export default class App extends Xapp {
     // walls
     const walls = new THREE.Mesh(
       new THREE.BoxGeometry(4, 2.5, 4),
-      new THREE.MeshStandardMaterial()
+      new THREE.MeshStandardMaterial({
+        map: wallColorTexture,
+        aoMap:wallARMTexture,
+        roughnessMap:wallARMTexture,
+        metalnessMap: wallARMTexture,
+        normalMap:wallNormalTexture
+      })
     )
     walls.position.y = 2.5/2
     house.add(walls)
@@ -218,7 +320,13 @@ export default class App extends Xapp {
     // roof
     const roof = new THREE.Mesh(
       new THREE.ConeGeometry(3.5, 1.5, 4),
-      new THREE.MeshStandardMaterial()
+      new THREE.MeshStandardMaterial({
+        map: roofColorTexture,
+        aoMap:roofARMTexture,
+        roughnessMap:roofARMTexture,
+        metalnessMap: roofARMTexture,
+        normalMap:roofNormalTexture
+      })
     )
     roof.position.y += 2.5 + 1.5 / 2
     roof.rotation.y = Math.PI * 0.25
@@ -226,8 +334,19 @@ export default class App extends Xapp {
 
     // Door
     const door = new THREE.Mesh(
-      new THREE.PlaneGeometry(2.2, 2.2),
-      new THREE.MeshStandardMaterial()
+      new THREE.PlaneGeometry(2.2, 2.2, 100, 100),
+      new THREE.MeshStandardMaterial({
+        map: doorColorTexture,
+        transparent: true,
+        alphaMap: doorAlphaTexture,
+        displacementMap: doorHeightTexture,
+        displacementScale: 0.15,
+        displacementBias: -0.04,
+        normalMap:doorNormalTexture,
+        aoMap: doorAmbientOcclusionTexture,
+        roughnessMap: doorRoughnessTexture,
+        metalnessMap: doorMetalnessTexture,
+      })
     )
     door.position.y += 2.2 / 2
     door.position.z += 4/2 + 0.01
@@ -235,29 +354,46 @@ export default class App extends Xapp {
 
     // Bushes
     const bushGeometry = new THREE.SphereGeometry(1, 16, 16)
-    const bushMaterial = new THREE.MeshStandardMaterial()
+    const bushMaterial = new THREE.MeshStandardMaterial({
+        color:'#ccffcc',
+        map: bushColorTexture,
+        aoMap:bushARMTexture,
+        roughnessMap:bushARMTexture,
+        metalnessMap: bushARMTexture,
+        normalMap:bushNormalTexture
+    })
     
     const bush1 = new THREE.Mesh(bushGeometry, bushMaterial)
     bush1.scale.set(0.5,0.5,0.5)
-    bush1.position.set(0.8,0.2,2.2)
+    bush1.position.set(0.8, 0.2, 2.2)
+    bush1.rotation.x = -0.75
     
     const bush2 = new THREE.Mesh(bushGeometry, bushMaterial)
     bush2.scale.set(0.25,0.25,0.25)
-    bush2.position.set(1.4,0.1,2.1)
+    bush2.position.set(1.4, 0.1, 2.1)
+    bush2.rotation.x = -0.75
 
     const bush3 = new THREE.Mesh(bushGeometry, bushMaterial)
     bush3.scale.set(0.4,0.4,0.4)
-    bush3.position.set(-0.8,0.1,2.2)
+    bush3.position.set(-0.8, 0.1, 2.2)
+    bush3.rotation.x = -0.75
 
     const bush4 = new THREE.Mesh(bushGeometry, bushMaterial)
     bush4.scale.set(0.15,0.15,0.15)
     bush4.position.set(-1, 0.05, 2.8)
+    bush4.rotation.x = -0.75
     
     house.add(bush1, bush2, bush3, bush4)
     
     // Graves
     const graveGeometory = new THREE.BoxGeometry(0.6, 0.8, 0.2)
-    const graveMaterial = new THREE.MeshStandardMaterial()
+    const graveMaterial = new THREE.MeshStandardMaterial({
+      map: graveColorTexture,
+      aoMap: graveARMTexture,
+      roughnessMap: graveARMTexture,  
+      metalnessMap: graveARMTexture,
+      normalMap:graveNormalTexture
+    })
 
     const graves = new THREE.Group()
     this.scene.add(graves)
@@ -278,8 +414,8 @@ export default class App extends Xapp {
       grave.rotation.y = (Math.random() - 0.5) * 0.4
       grave.rotation.z = (Math.random() - 0.5) * 0.4
 
-      
       // Add to grave group
+      // grave.receiveShadow = grave.castShadow = true
       graves.add(grave)
     }
 
@@ -287,16 +423,44 @@ export default class App extends Xapp {
      * ========= light =========
      */
     // ambient
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1.5)
+    const ambientLight = new THREE.AmbientLight('#86cdff', 1.275)
     this.scene.add(ambientLight)
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.9)
+    // Directional light
+    const directionalLight = new THREE.DirectionalLight('#86cdff', 3)
     directionalLight.position.set(3,2,-8)
     this.scene.add(directionalLight)
 
+    // Door light
+    const doorLight = new THREE.PointLight('#ff7d46', 5)
+    doorLight.position.set(0, 2.2, 2.5)
+    house.add(doorLight)
+    
+    // Ghosts
+    this.ghost1 = new THREE.PointLight('#8800ff', 6)
+    this.ghost2 = new THREE.PointLight('#ff0088', 6)
+    this.ghost3 = new THREE.PointLight('#ff0000', 6)
+    this.scene.add(this.ghost1, this.ghost2, this.ghost3)
+
+    // Shadows
+    directionalLight.castShadow = true
+    this.ghost1.castShadow = true
+    this.ghost2.castShadow = true
+    this.ghost3.castShadow = true
+
+    walls.castShadow = walls.receiveShadow = true
+    roof.castShadow = roof.receiveShadow = true
+    floor.castShadow = floor.receiveShadow = true
+
+    graves.traverse(obj => {
+      obj.receiveShadow = obj.castShadow = true
+    })
+    
     /**
      * ========= debug =========
      */
+    this.gui.add(floor.material,"displacementScale").min(0).max(1).step(0.001).name('floorDisplacementScale')
+    this.gui.add(floor.material,"displacementBias").min(-1).max(1).step(0.001).name('floorDisplacementBias')
 
     /**
      * ========= load all assets =========
@@ -337,9 +501,23 @@ export default class App extends Xapp {
     }
     if (sequence.isMain)
     { // main loop animation
-      
+
+      const ghost1Angle = elapsedTime * 0.5
+      this.ghost1.position.x = Math.sin(ghost1Angle) * 4
+      this.ghost1.position.z = Math.cos(ghost1Angle) * 4
+      this.ghost1.position.y = Math.sin(ghost1Angle) * Math.sin(ghost1Angle * 2.34) * Math.sin(ghost1Angle * 5.67)
+
+      const ghost2Angle = elapsedTime * 0.38 * -1
+      this.ghost2.position.x = Math.sin(ghost2Angle) * 5
+      this.ghost2.position.z = Math.cos(ghost2Angle) * 5
+      this.ghost2.position.y = Math.sin(ghost2Angle) * Math.sin(ghost2Angle * 2.34) * Math.sin(ghost2Angle * 5.67)
+
+      const ghost3Angle = elapsedTime * 0.23
+      this.ghost3.position.x = Math.sin(ghost3Angle) * 6
+      this.ghost3.position.z = Math.cos(ghost3Angle) * 6
+      this.ghost3.position.y = Math.sin(ghost3Angle) * Math.sin(ghost3Angle * 2.34) * Math.sin(ghost3Angle * 5.67)
     }
-    
+  
     /**
     * ========= handle resize viewport =========
     */
