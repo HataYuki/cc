@@ -17,6 +17,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import {damp} from 'maath/easing'
 import gsap from 'gsap'
 import GUI from 'lil-gui'
+import {Sky} from 'three/addons/objects/Sky.js'
 import { RectAreaLightHelper } from 'three/examples/jsm/helpers/RectAreaLightHelper.js'
 const {lerp,clamp} = THREE.MathUtils
 
@@ -163,35 +164,35 @@ export default class App extends Xapp {
      */
     this.assets = {
       // floor
-      floorAlphaTexture: { url: '/textures/floor/alpha.jpg',type:'TEXTURE', must:true},
-      floorARMTexture: { url: '/textures/floor/coast_sand_rocks_02_1k/coast_sand_rocks_02_arm_1k.jpg',type:'TEXTURE', must:true},
-      floorColorTexture: { url: '/textures/floor/coast_sand_rocks_02_1k/coast_sand_rocks_02_diff_1k.jpg',type:'TEXTURE', must:true},
-      floorDisplacementTexture: { url: '/textures/floor/coast_sand_rocks_02_1k/coast_sand_rocks_02_disp_1k.jpg',type:'TEXTURE', must:true},
-      floorNormalTexture: { url: '/textures/floor/coast_sand_rocks_02_1k/coast_sand_rocks_02_nor_gl_1k.png', type: 'TEXTURE', must: true },
+      floorAlphaTexture: { url: '/textures/floor/alpha.webp',type:'TEXTURE', must:true},
+      floorARMTexture: { url: '/textures/floor/coast_sand_rocks_02_1k/coast_sand_rocks_02_arm_1k.webp',type:'TEXTURE', must:true},
+      floorColorTexture: { url: '/textures/floor/coast_sand_rocks_02_1k/coast_sand_rocks_02_diff_1k.webp',type:'TEXTURE', must:true},
+      floorDisplacementTexture: { url: '/textures/floor/coast_sand_rocks_02_1k/coast_sand_rocks_02_disp_1k.webp',type:'TEXTURE', must:true},
+      floorNormalTexture: { url: '/textures/floor/coast_sand_rocks_02_1k/coast_sand_rocks_02_nor_gl_1k.webp', type: 'TEXTURE', must: true },
       // wall
-      wallARMTexture: { url: '/textures/wall/castle_brick_broken_06_1k/castle_brick_broken_06_arm_1k.jpg',type:'TEXTURE', must:true},
-      wallColorTexture: { url: '/textures/wall/castle_brick_broken_06_1k/castle_brick_broken_06_diff_1k.jpg',type:'TEXTURE', must:true},
-      wallNormalTexture: { url: '/textures/wall/castle_brick_broken_06_1k/castle_brick_broken_06_nor_gl_1k.png', type: 'TEXTURE', must: true },
+      wallARMTexture: { url: '/textures/wall/castle_brick_broken_06_1k/castle_brick_broken_06_arm_1k.webp',type:'TEXTURE', must:true},
+      wallColorTexture: { url: '/textures/wall/castle_brick_broken_06_1k/castle_brick_broken_06_diff_1k.webp',type:'TEXTURE', must:true},
+      wallNormalTexture: { url: '/textures/wall/castle_brick_broken_06_1k/castle_brick_broken_06_nor_gl_1k.webp', type: 'TEXTURE', must: true },
       // root
-      roofARMTexture: { url: '/textures/roof/roof_slates_02_1k/roof_slates_02_arm_1k.jpg',type:'TEXTURE', must:true},
-      roofColorTexture: { url: '/textures/roof/roof_slates_02_1k/roof_slates_02_diff_1k.jpg',type:'TEXTURE', must:true},
-      roofNormalTexture: { url: '/textures/roof/roof_slates_02_1k/roof_slates_02_nor_gl_1k.png', type: 'TEXTURE', must: true },
+      roofARMTexture: { url: '/textures/roof/roof_slates_02_1k/roof_slates_02_arm_1k.webp',type:'TEXTURE', must:true},
+      roofColorTexture: { url: '/textures/roof/roof_slates_02_1k/roof_slates_02_diff_1k.webp',type:'TEXTURE', must:true},
+      roofNormalTexture: { url: '/textures/roof/roof_slates_02_1k/roof_slates_02_nor_gl_1k.webp', type: 'TEXTURE', must: true },
       // bush
-      bushARMTexture: { url: '/textures/bush/leaves_forest_ground_1k/leaves_forest_ground_arm_1k.jpg',type:'TEXTURE', must:true},
-      bushColorTexture: { url: '/textures/bush/leaves_forest_ground_1k/leaves_forest_ground_diff_1k.jpg',type:'TEXTURE', must:true},
-      bushNormalTexture: { url: '/textures/bush/leaves_forest_ground_1k/leaves_forest_ground_nor_gl_1k.png', type: 'TEXTURE', must: true },
+      bushARMTexture: { url: '/textures/bush/leaves_forest_ground_1k/leaves_forest_ground_arm_1k.webp',type:'TEXTURE', must:true},
+      bushColorTexture: { url: '/textures/bush/leaves_forest_ground_1k/leaves_forest_ground_diff_1k.webp',type:'TEXTURE', must:true},
+      bushNormalTexture: { url: '/textures/bush/leaves_forest_ground_1k/leaves_forest_ground_nor_gl_1k.webp', type: 'TEXTURE', must: true },
       // grave
-      graveARMTexture: { url: '/textures/grave/plastered_stone_wall_1k/plastered_stone_wall_arm_1k.jpg',type:'TEXTURE', must:true},
-      graveColorTexture: { url: '/textures/grave/plastered_stone_wall_1k/plastered_stone_wall_diff_1k.jpg',type:'TEXTURE', must:true},
-      graveNormalTexture: { url: '/textures/grave/plastered_stone_wall_1k/plastered_stone_wall_nor_gl_1k.png', type: 'TEXTURE', must: true },
+      graveARMTexture: { url: '/textures/grave/plastered_stone_wall_1k/plastered_stone_wall_arm_1k.webp',type:'TEXTURE', must:true},
+      graveColorTexture: { url: '/textures/grave/plastered_stone_wall_1k/plastered_stone_wall_diff_1k.webp',type:'TEXTURE', must:true},
+      graveNormalTexture: { url: '/textures/grave/plastered_stone_wall_1k/plastered_stone_wall_nor_gl_1k.webp', type: 'TEXTURE', must: true },
       // door
-      doorAlphaTexture:{ url: '/textures/door/alpha.jpg',type:'TEXTURE', must:true},
-      doorColorTexture:{ url: '/textures/door/color.jpg',type:'TEXTURE', must:true},
-      doorAmbientOcclusionTexture:{ url: '/textures/door/ambientOcclusion.jpg',type:'TEXTURE', must:true},
-      doorRoughnessTexture: { url: '/textures/door/roughness.jpg', type: 'TEXTURE', must: true },
-      doorMetalnessTexture: { url: '/textures/door/metalness.jpg', type: 'TEXTURE', must: true },
-      doorHeightTexture:{ url: '/textures/door/height.jpg',type:'TEXTURE', must:true},
-      doorNormalTexture:{ url: '/textures/door/normal.jpg',type:'TEXTURE', must:true},
+      doorAlphaTexture:{ url: '/textures/door/alpha.webp',type:'TEXTURE', must:true},
+      doorColorTexture:{ url: '/textures/door/color.webp',type:'TEXTURE', must:true},
+      doorAmbientOcclusionTexture:{ url: '/textures/door/ambientOcclusion.webp',type:'TEXTURE', must:true},
+      doorRoughnessTexture: { url: '/textures/door/roughness.webp', type: 'TEXTURE', must: true },
+      doorMetalnessTexture: { url: '/textures/door/metalness.webp', type: 'TEXTURE', must: true },
+      doorHeightTexture:{ url: '/textures/door/height.webp',type:'TEXTURE', must:true},
+      doorNormalTexture:{ url: '/textures/door/normal.webp',type:'TEXTURE', must:true},
     }
 
     /**
@@ -419,6 +420,19 @@ export default class App extends Xapp {
       graves.add(grave)
     }
 
+    // Sky
+    this.sky = new Sky()
+    this.sky.scale.set(100,100,100)
+    this.scene.add(this.sky)
+    this.sky.material.uniforms['turbidity'].value = 10
+    this.sky.material.uniforms['rayleigh'].value = 3
+    this.sky.material.uniforms['mieCoefficient'].value = 0.1
+    this.sky.material.uniforms['mieDirectionalG'].value = 0.95
+    this.sky.material.uniforms['sunPosition'].value.set(0.3, -0.038, -0.95)
+
+    // Fog
+    this.scene.fog = new THREE.FogExp2('#07090d', 0.1)
+
     /**
      * ========= light =========
      */
@@ -427,7 +441,7 @@ export default class App extends Xapp {
     this.scene.add(ambientLight)
 
     // Directional light
-    const directionalLight = new THREE.DirectionalLight('#86cdff', 3)
+    const directionalLight = new THREE.DirectionalLight('#86cdff', 6)
     directionalLight.position.set(3,2,-8)
     this.scene.add(directionalLight)
 
@@ -442,25 +456,66 @@ export default class App extends Xapp {
     this.ghost3 = new THREE.PointLight('#ff0000', 6)
     this.scene.add(this.ghost1, this.ghost2, this.ghost3)
 
-    // Shadows
+    /**
+     * ========= Shadows =========
+     */
     directionalLight.castShadow = true
     this.ghost1.castShadow = true
     this.ghost2.castShadow = true
     this.ghost3.castShadow = true
 
     walls.castShadow = walls.receiveShadow = true
-    roof.castShadow = roof.receiveShadow = true
+    roof.castShadow = true
     floor.castShadow = floor.receiveShadow = true
 
-    graves.traverse(obj => {
-      obj.receiveShadow = obj.castShadow = true
-    })
+    for (const grave of graves.children)
+    {
+      grave.castShadow = grave.receiveShadow = true
+    }
+
+    // Mapping
+    directionalLight.shadow.mapSize.width =
+      directionalLight.shadow.mapSize.height = Math.pow(2, 8)
+    directionalLight.shadow.camera.top = 8
+    directionalLight.shadow.camera.bottom = -8
+    directionalLight.shadow.camera.left = -8
+    directionalLight.shadow.camera.right = 8
+    directionalLight.shadow.camera.near = 1
+    directionalLight.shadow.camera.far = 20
+
+    this.ghost1.shadow.mapSize.width =
+      this.ghost1.shadow.mapSize.height = Math.pow(2, 8)
+    this.ghost1.shadow.camera.far = 10
+
+    this.ghost2.shadow.mapSize.width =
+      this.ghost2.shadow.mapSize.height = Math.pow(2, 8)
+    this.ghost2.shadow.camera.far = 10
+
+    this.ghost3.shadow.mapSize.width =
+      this.ghost3.shadow.mapSize.height = Math.pow(2, 8)
+    this.ghost3.shadow.camera.far = 10
+
     
     /**
      * ========= debug =========
      */
     this.gui.add(floor.material,"displacementScale").min(0).max(1).step(0.001).name('floorDisplacementScale')
-    this.gui.add(floor.material,"displacementBias").min(-1).max(1).step(0.001).name('floorDisplacementBias')
+    this.gui.add(floor.material, "displacementBias").min(-1).max(1).step(0.001).name('floorDisplacementBias')
+
+    
+    
+    // Sky GUI Controls
+    const skyFolder = this.gui.addFolder('Sky Settings')
+    skyFolder.add(this.sky.material.uniforms.turbidity, 'value').min(0).max(20).step(0.1).name('Turbidity')
+    skyFolder.add(this.sky.material.uniforms.rayleigh, 'value').min(0).max(10).step(0.1).name('Rayleigh')
+    skyFolder.add(this.sky.material.uniforms.mieCoefficient, 'value').min(0).max(0.5).step(0.001).name('Mie Coefficient')
+    skyFolder.add(this.sky.material.uniforms.mieDirectionalG, 'value').min(0).max(1).step(0.001).name('Mie Directional G')
+    
+    // Sun Position Controls
+    const sunFolder = skyFolder.addFolder('Sun Position')
+    sunFolder.add(this.sky.material.uniforms.sunPosition.value, 'x').min(-1).max(1).step(0.001).name('Sun X')
+    sunFolder.add(this.sky.material.uniforms.sunPosition.value, 'y').min(-1).max(1).step(0.001).name('Sun Y')
+    sunFolder.add(this.sky.material.uniforms.sunPosition.value, 'z').min(-1).max(1).step(0.001).name('Sun Z')
 
     /**
      * ========= load all assets =========
