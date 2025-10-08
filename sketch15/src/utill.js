@@ -411,6 +411,7 @@ export default class Xapp {
 
       detectSwipe(this.__deltaY, deltaTime, this.onSwipe.bind(this), this.onSwipeEnd.bind(this))
       this.onUpdate(time, deltaTime, { x: this.__deltaX, y: this.__deltaY })
+      console.log(this.needUpdateResize)
 
       this.needUpdateResize = false
       this.needUpdateScroll = false
