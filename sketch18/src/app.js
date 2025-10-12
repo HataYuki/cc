@@ -15,7 +15,11 @@ import * as THREE from 'three'
 import gsap from 'gsap'
 import {Sky} from 'three/addons/objects/Sky.js'
 import { RectAreaLightHelper } from 'three/examples/jsm/helpers/RectAreaLightHelper.js'
-const { lerp, clamp, damp } = THREE.MathUtils
+
+/**
+ * maath
+ */
+import { damp ,damp2} from 'maath/easing'
 
 /**
  * shader
@@ -41,10 +45,13 @@ export default class App extends Xdraw{
     gradientTexture: { url: '/textures/gradients/3.jpg',type:'TEXTURE', must:true},
   }
   params = {}
+  scrollPos = new THREE.Vector2(0, 0)
   constructor(parser) { super(parser) }
   async appSetup() { 
     this.controls.enabled = false  // 完全に無効化
     this.gui.hidden = false
+    
+    this.docMain = document.querySelector('main')
 
     /**
      * camera
@@ -79,7 +86,7 @@ export default class App extends Xdraw{
     // Meshes
     this.params.objectDistance = 4
     const mesh1 = new THREE.Mesh(
-      new THREE.TorusGeometry(1, 0.4, 16, 60),
+      new THREE.TorusGeometry(1, 0.4, 128, 128),
       this.material
     )
 
@@ -97,9 +104,63 @@ export default class App extends Xdraw{
     mesh2.position.y = - this.params.objectDistance * 1
     mesh3.position.y = - this.params.objectDistance * 2
 
-    this.scene.add(mesh1, mesh2, mesh3)
+    mesh1.position.x = 2
+    mesh2.position.x = -2
+    mesh3.position.x = 2
 
+    this.scene.add(mesh1, mesh2, mesh3)
     this.sectionMeshes = [mesh1, mesh2, mesh3]
+
+
+    // Particles
+    this.params.particleCount = 10000
+    this.params.particleSize = 0.01
+    let geometry, points = null
+    this.particleMaterial = null
+    this.genParticles = () => {
+      if (points !== null)
+      {
+        geometry.dispose()
+        this.particleMaterial.dispose()
+        this.scene.remove(points)
+      }
+        
+      const positions = new Float32Array(this.params.particleCount * 3)
+
+      geometry = new THREE.BufferGeometry()
+      this.particleMaterial = new THREE.PointsMaterial({
+        size: this.params.particleSize,
+        sizeAttenuation: true,
+        depthWrite: false,
+        blendColor: THREE.AdditiveBlending
+      })
+
+      for (let i = 0; i < this.params.particleCount; i++)
+      {
+        const i3 = i * 3
+        positions[i3 + 0] = ((Math.random() - 0.5) * 20) 
+        positions[i3 + 1] = this.params.objectDistance * 0.5 - Math.random() * this.params.objectDistance * this.sectionMeshes.length
+        positions[i3 + 2] = ((Math.random() - 0.5) * 20)
+      }
+
+      geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+      points = new THREE.Points(geometry,this.particleMaterial)
+
+      this.scene.add(points)
+    }
+    this.genParticles()
+
+    
+
+
+    /**
+     * ========= Cursor =========
+     */
+    
+
+    /**
+     * Spin animation
+     */
     
 
 
@@ -141,6 +202,7 @@ export default class App extends Xdraw{
     materialColor.addBinding(this.params, 'materialColor', { view: 'color' })
     materialColor.on('change', () => {
       this.material.color.set(this.params.materialColor)
+      this.particleMaterial.color.set(this.params.materialColor)
     })
   }
   effect(addPass,ShaderPass) {
@@ -156,12 +218,72 @@ export default class App extends Xdraw{
   draw(time, deltaTime) {
     for (const mesh of this.sectionMeshes)
     {
-      mesh.rotation.x = time * 0.1
-      mesh.rotation.y = time * 0.12
+      mesh.rotation.x += deltaTime * 0.1
+      mesh.rotation.y += deltaTime * 0.12
     }
+
+    /**
+     * Animate camera
+     */
+    this.parallax ??= new THREE.Vector2(0, 0)
+    const campos = new THREE.Vector2(0, 0)
+    const cursor = this.cursorPosition.clone().divide(this.viewSize).subScalar(0.5)
+    
+    campos.y = - this.scrollPosition.y / this.viewSize.y * this.params.objectDistance
+    
+    cursor.multiply(new THREE.Vector2(1, -1))
+    cursor.multiplyScalar(0.5)
+    damp2(this.parallax, cursor, 0.25, deltaTime)
+  
+    campos.add(this.parallax)
+    
+    this.camera.position.x = campos.x
+    this.camera.position.y = campos.y
+
+    
+    /**
+     * Spin animation
+     */
+    this.currentSection ??= 0
     if (this[Xdraw.SCROLL_FRAG])
     {
-      this.camera.position.y = - this.scrollPosition.y / this.viewSize.y * this.params.objectDistance
+      const newSection = Math.round(this.scrollPosition.y / this.viewSize.y)
+      if (this.currentSection !== newSection) {
+        this.currentSection = newSection
+        
+        gsap
+          .to(this.sectionMeshes[this.currentSection].rotation, {
+            duration: 1.5,
+            ease: 'power2.inOut',
+            x: '+=6',
+            y: '+=3',
+            z: '+=1.5'
+          })
+      }
+    }
+    
+
+    /**
+     * Smooth scroll
+     */
+    if (this[Xdraw.RESIZE_FRAG] || this[Xdraw.SCROLL_FRAG])
+    {
+      const newPos = this.scrollPos.clone()
+      const pageSize = this.docMain.getBoundingClientRect()
+      
+      newPos
+        .add(this.scrollDelta)
+        .clamp(
+          new THREE.Vector2(0, 0),
+          new THREE.Vector2(
+            pageSize.width - this.viewSize.x,
+            pageSize.height - this.viewSize.y
+          )
+      )
+      
+      damp2(this.scrollPos, newPos, 0.05, deltaTime)
+
+      window.scroll(this.scrollPos.x, this.scrollPos.y)
     }
   }
 }

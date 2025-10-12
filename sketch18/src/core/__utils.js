@@ -138,8 +138,6 @@ class ScrollManager {
   constructor(element = window, options) {
     this.__element = element
 
-    console.log(this.__element)
-
     if (options) this.options = { ...this.options, ...options }
 
     this.setup()
@@ -726,16 +724,68 @@ class InputKeyManager {
 }
 
 /**
+ * CursorManager
+ */
+class CursorManager{
+  static LISTENER_OPTION ={passive:true}
+  __emitter = new Emittery()
+  __position = new THREE.Vector2(0, 0)
+  __delta = new THREE.Vector2(0, 0)
+  __speed = 0
+  __rafId = null
+  __needsUpdate = false
+  constructor() {
+    this.setup()
+  }
+  get position() {
+    return this.__position.clone()
+  }
+  setup() {
+    window.addEventListener('mousemove', this.__onMouseMove, CursorManager.LISTENER_OPTION)
+  }
+  on(event,callback) {
+    this.__emitter.on(event, callback)
+    return this
+  }
+  consumeCursorUpdate(object, keyName) {
+    const wasNeeded = this.__needsUpdate
+    this.__needsUpdate = false
+    if (object && keyName) object[keyName] = wasNeeded
+    return wasNeeded
+  }
+  __mouseMove(event) {
+    const newPosition = new THREE.Vector2(event.clientX, event.clientY)
+    this.__delta.copy(newPosition).sub(this.__position)
+    this.__position.copy(newPosition)
+
+    this.__speed = this.__delta.length()
+    this.__needsUpdate = true
+
+    this.__emitter.emit('cursormove', { position: this.__position })
+    cancelAnimationFrame(this.__rafId)
+    this.__rafId = null
+  }
+  __onMouseMove = event => {
+    cancelAnimationFrame(this.__rafId)
+    this.__rafId = requestAnimationFrame(()=>this.__mouseMove(event))
+  }
+  dispose() {
+    window.removeEventListener('mousemove', this.__onMouseMove, CursorManager.LISTENER_OPTION)
+    this.__emitter.clearListeners()
+    if(this.__rafId) cancelAnimationFrame(this.__rafId),this.__rafId = null
+  }
+}
+
+/**
  * Xapp
  * A base class for creating applications with scrolling and touch support.
  */
 class Xapp {
-  static DELTA_X_MAX = 300
-  static DELTA_Y_MAX = 300
   static RESIZE_FRAG = 'needsResizeUpdate'
   static SCROLL_FRAG = 'needsScrollUpdate'
   static SWIPE_X_FRAG = 'needsSwipeXTriggered'
   static SWIPE_Y_FRAG = 'needsSwipeYTriggered'
+  static CUROSR_MOVE_FRAG = 'needsCursorMoved'
 
   /**
    * Manager
@@ -744,11 +794,13 @@ class Xapp {
   inputKeyManager = new InputKeyManager()
   scrollManager = new ScrollManager() // デフォルトでwindow
   swipeManager = new SwipeManager()
+  cursorManager = new CursorManager()
 
   viewSize = this.viewportManager.size
   scrollDelta = this.scrollManager.delta
   scrollSpeed = this.scrollManager.speed
   scrollPosition = this.scrollManager.position
+  cursorPosition = this.cursorManager.position
 
   constructor() {
     this.inputKeyManager
@@ -773,14 +825,15 @@ class Xapp {
       // Frag Manage
       this.viewportManager.consumeViewportUpdate(this, Xapp.RESIZE_FRAG)
       this.scrollManager.consumeScrollUpdate(this, Xapp.SCROLL_FRAG)
-      this.swipeManager.consumeSwipeX(this, Xapp.DELTA_X_MAX)
+      this.swipeManager.consumeSwipeX(this, Xapp.SWIPE_X_FRAG)
       this.swipeManager.consumeSwipeY(this, Xapp.SWIPE_Y_FRAG)
+      this.cursorManager.consumeCursorUpdate(this, Xapp.CUROSR_MOVE_FRAG)
 
       this.viewSize = this.viewportManager.size
       this.scrollDelta = this.scrollManager.delta
       this.scrollSpeed = this.scrollManager.speed
       this.scrollPosition = this.scrollManager.position
-      
+      this.cursorPosition = this.cursorManager.position
 
       this.update(time, deltaTime)
     })
@@ -838,6 +891,7 @@ export default class Xdraw extends Xapp {
   allAssetsProgress = 0
 
   __isContinueUpdate = false
+  __firstLoop = true
 
   constructor(parser) {
     super()
@@ -1032,6 +1086,7 @@ export default class Xdraw extends Xapp {
     if (this[Xdraw.START_LOAD_ALL_ASSETS_FRAG]) this.__isContinueUpdate = true
       
     if (!this.__isContinueUpdate) return
+
     
     
     /**
