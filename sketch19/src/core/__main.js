@@ -22,18 +22,18 @@ domReady(async () => {
         // remove listeners after disposing
         window.removeEventListener('pagehide', onPageHide)
         window.removeEventListener('beforeunload', onBeforeUnload)
-        document.removeEventListener('visibilitychange', onVisibilityChange)
+        // document.removeEventListener('visibilitychange', onVisibilityChange)
     }
 
     const onPageHide = () => dispose()
     const onBeforeUnload = () => dispose()
-    const onVisibilityChange = () => {
-        if (document.visibilityState === 'hidden') dispose()
-    }
+    // const onVisibilityChange = () => {
+    //     if (document.visibilityState === 'hidden') dispose()
+    // }
 
     window.addEventListener('pagehide', onPageHide)
     window.addEventListener('beforeunload', onBeforeUnload)
-    document.addEventListener('visibilitychange', onVisibilityChange, { passive: true })
+    // document.addEventListener('visibilitychange', onVisibilityChange, { passive: true })
 
     // Vite HMR: dispose old instance before replacement
     if (import.meta && import.meta.hot) {

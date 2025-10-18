@@ -7,9 +7,13 @@ import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js'
  */
 import * as THREE from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
-import {Pane} from 'tweakpane'
-import Stats from 'three/addons/libs/stats.module.js'
 const { clamp, damp } = THREE.MathUtils
+
+/**
+ * Tweak pane
+ */
+import { Pane } from 'tweakpane'
+import * as EssentialsPlugin from '@tweakpane/plugin-essentials';
 
 /**
  * Post processor
@@ -131,7 +135,7 @@ class ScrollManager {
 
   __rafWheelId = null
   __rafTouchMoveId = null
-  __rafScrollIdId = null
+  __rafScrollId = null
 
   __startInertiaTimer = null
 
@@ -330,7 +334,7 @@ class ScrollManager {
  */
 class SwipeManager {
   static DELTA_BUFFER_SIZE = 5
-  static DELTA_HISTORY_SIZE = 3
+  static DELTA_HISTORY_SIZE = 5
   
   __delta_x_buffer = new Array(SwipeManager.DELTA_BUFFER_SIZE).fill(0)
   __delta_y_buffer = new Array(SwipeManager.DELTA_BUFFER_SIZE).fill(0)
@@ -361,7 +365,7 @@ class SwipeManager {
         this.__emitter.emit('startSwipeX', { dir }), this.__xSwiped = true, this.__needsUpdateX = true
       }
       if (isDown && this.__xSwiped) {
-        this.__emitter.emit('endSwipeX', { dir }), this.__xSwiped = false, this.__needsUpdateY = true
+        this.__emitter.emit('endSwipeX', { dir }), this.__xSwiped = false, this.__needsUpdateX = true
 
       }
     }
@@ -373,10 +377,10 @@ class SwipeManager {
       const dir = (scrollDeltaY > 0) ? 1 : -1
 
       if (isUp && speedY > 0.5 && !this.__ySwiped) {
-        this.__emitter.emit('startSwipeY', { dir }), this.__ySwiped = true
+        this.__emitter.emit('startSwipeY', { dir }), this.__ySwiped = true, this.__needsUpdateY = true
       }
       if (isDown && this.__ySwiped) {
-        this.__emitter.emit('endSwipeY',{dir}), this.__ySwiped = false
+        this.__emitter.emit('endSwipeY', { dir }), this.__ySwiped = false, this.__needsUpdateY = true
       }
     }
   }
@@ -420,8 +424,8 @@ class SwipeManager {
   }
   
   __pushHistory(smoothX, smoothY) {
-    if (smoothX) this.__push('__smooth_x_his', smoothX, SwipeManager.DELTA_BUFFER_SIZE)
-    if (smoothY) this.__push('__smooth_y_his', smoothY, SwipeManager.DELTA_BUFFER_SIZE)
+  if (smoothX) this.__push('__smooth_x_his', smoothX, SwipeManager.DELTA_HISTORY_SIZE)
+  if (smoothY) this.__push('__smooth_y_his', smoothY, SwipeManager.DELTA_HISTORY_SIZE)
   }
 
   __push(bufferName, value, maxBufferLen) {
@@ -452,14 +456,14 @@ class SwipeManager {
 
 class AssetManager {
   __mustAssetsLen = 0
-  __allAssetsLen = 0
+  __nonMustAssetsLen = 0
   __mustLoaded = false
   __allLoaded = false
   __needsUpdateLoadedMust = false
   __needsUpdateLoadedall = false
   __needsUpdateStartLoadAll = false
   __mustProgress = 0
-  __allProgress = 0
+  __nonMustProgress = 0
   __loadingManager = null
   __emitter = new Emittery()
   __assets = null
@@ -482,7 +486,7 @@ class AssetManager {
   setup(assets) {
     this.__assets = assets
     this.__mustAssetsLen = Object.keys(this.__assets).filter(k => this.__assets[k].must).length
-    this.__allAssetsLen = Object.keys(this.__assets).filter(k => !this.__assets[k].must).length
+    this.__nonMustAssetsLen = Object.keys(this.__assets).filter(k => !this.__assets[k].must).length
     return this
   }
 
@@ -504,7 +508,7 @@ class AssetManager {
     this.__needsUpdateStartLoadAll = true
 
     if (!this.__mustLoaded) await this.whenMustLoad()
-    if (!this.__allAssetsLen) return Promise.resolve()
+    if (!this.__nonMustAssetsLen) return Promise.resolve()
     
     const checkNotMust = key => (this.__assets[key].hasOwnProperty('must') && !this.__assets[key].must)
     
@@ -570,12 +574,12 @@ class AssetManager {
   }
 
   __onProgress(url, number) {
-    if (!this.__mustLoaded) {
+     if (!this.__mustLoaded) {
       this.__mustProgress = number / this.__mustAssetsLen
       this.__emitter.emit('mustAssetsLoading', { progress: this.__mustProgress })
     } else {
-      this.__allProgress = (number - this.__mustAssetsLen) / this.__allAssetsLen
-      this.__emitter.emit('allAssetsLoading', { progress: this.__allProgress })
+      this.__nonMustProgress = (number - this.__mustAssetsLen) / this.__allAssetsLen
+      this.__emitter.emit('nonMustAssetsLoading', { progress: this.__nonMustProgress })
     }
   }
 
@@ -810,7 +814,7 @@ class Xapp {
   static SCROLL_FRAG = 'needsScrollUpdate'
   static SWIPE_X_FRAG = 'needsSwipeXTriggered'
   static SWIPE_Y_FRAG = 'needsSwipeYTriggered'
-  static CUROSR_MOVE_FRAG = 'needsCursorMoved'
+  static CURSOR_MOVE_FRAG = 'needsCursorMoved'
 
   /**
    * Manager
@@ -824,7 +828,7 @@ class Xapp {
   /**
    * Tiker
    */
-  tikerDispose = null
+  tickerDispose = null
 
   viewSize = this.viewportManager.size
   scrollDelta = this.scrollManager.delta
@@ -847,7 +851,7 @@ class Xapp {
       .on('endSwipeY', arg => this.onSwipeYEnd(arg.dir))
     
 
-    this.tikerDispose = Ticker((arg) => {
+  this.tickerDispose = Ticker((arg) => {
       let { time, deltaTime } = arg
 
       this.swipeManager.update(this.scrollDelta.x, this.scrollDelta.y, deltaTime)
@@ -857,7 +861,7 @@ class Xapp {
       this.scrollManager.consumeScrollUpdate(this, Xapp.SCROLL_FRAG)
       this.swipeManager.consumeSwipeX(this, Xapp.SWIPE_X_FRAG)
       this.swipeManager.consumeSwipeY(this, Xapp.SWIPE_Y_FRAG)
-      this.cursorManager.consumeCursorUpdate(this, Xapp.CUROSR_MOVE_FRAG)
+  this.cursorManager.consumeCursorUpdate(this, Xapp.CURSOR_MOVE_FRAG)
 
       this.viewSize = this.viewportManager.size
       this.scrollDelta = this.scrollManager.delta
@@ -914,7 +918,7 @@ export default class Xdraw extends Xapp {
 
   deviceType = 'pc'
   mustAssetsProgress = 0
-  allAssetsProgress = 0
+  nonMustAssetsProgress = 0
 
   __isContinueUpdate = false
   __firstLoop = true
@@ -925,21 +929,15 @@ export default class Xdraw extends Xapp {
      * ========= Check device =========
      */
     const type = parser.getDevice().type
-    if (type) this.device_type = type
-  
-    /**
-     * ========= GUI =========
-     */
-    this.gui = new Pane({ title: 'Parameters', expanded: true })
-    this.gui.hidden = true
-    
-    // CSS変数でTweakpane幅を設定
-    
+    if (type) this.device_type = type 
   }
   async __setup() {
     /**
-     * set Tweak pane width
+     * Tweak pane
      */
+    this.gui = new Pane({ title: 'Parameters', expanded: true })
+    this.gui.registerPlugin(EssentialsPlugin)
+    this.gui.hidden = true
     document.documentElement.style.setProperty('--tweakpane-width', `${this.TWEAK_WIDTH}px`)
 
     /**
@@ -948,7 +946,7 @@ export default class Xdraw extends Xapp {
     this.assetsManager
       .setup(this.assets)
       .on('mustAssetsLoading', p => { this.mustAssetsProgress = p.progress })
-      .on('allAssetsLoading', p => this.allAssetsProgress = p.progress)
+      .on('nonMustAssetsLoading', p => this.nonMustAssetsProgress = p.progress)
 
     /**
      * ========= Setup code =========
@@ -957,15 +955,6 @@ export default class Xdraw extends Xapp {
     if (!this.canvas) throw new Error(`Canvas element with ID '${this.CANVAS_ID}' not found`)
     
     this.__container = this.canvas.parentNode
-
-
-    /**
-     * ========= Stats =========
-     */
-    this.__isStatsShow = 3
-    this.__stats = new Stats()
-    this.__container.appendChild(this.__stats.dom)
-    this.__stats.showPanel(this.__isStatsShow)
 
 
     /**
@@ -991,7 +980,7 @@ export default class Xdraw extends Xapp {
     this.renderer.outputColorSpace = THREE.SRGBColorSpace
     this.renderer.shadowMap.enabled = true
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap
-    this.renderer.toneMapping = THREE.ACESFilmicToneMapping
+    this.renderer.toneMapping = THREE.ACESFilmicToneMaBıpping
     
 
     /**
@@ -1098,8 +1087,11 @@ export default class Xdraw extends Xapp {
     /**
      * ========= Debug =========
      */
+    this.fpsGraph = this.gui.addBlade({ view: 'fpsgraph', label: 'fpsgraph', rows: 1 })
+
     const arrowHelperGui = this.gui.addFolder({title:'ArrowHelper'})
-    arrowHelperGui.addBinding(this.arrowHelper, 'visible', { title: 'aaa' })
+    arrowHelperGui.addBinding(this.arrowHelper, 'visible')
+
     this.tweak(this.gui)
   }
   update(time, deltaTime) {
@@ -1114,7 +1106,10 @@ export default class Xdraw extends Xapp {
       
     if (!this.__isContinueUpdate) return
 
-    
+    /**
+     * ========= Tweak pane fps begin =========
+     */
+    this.fpsGraph.begin()
     
     /**
      * ========= Timer =========
@@ -1126,13 +1121,14 @@ export default class Xdraw extends Xapp {
     * ========= Update utilitys =========
     */
     if (this.controls.enabled) this.controls.update()    
-    this.__stats.update()
 
 
     /**
      * ========= Main draw =========
      */
+    
     this.draw(this.__timer.getElapsed(), deltaTime)
+    
     
   
     /**
@@ -1154,13 +1150,18 @@ export default class Xdraw extends Xapp {
      * ========= render =========
      */
     this.effectComposer.render()
+
+    
+    /**
+     * ========= Tweak pane fps end =========
+     */
+    this.fpsGraph.end()
   }
 
   onSwipeXStart(dir) { this.swipe(new THREE.Vector3(1, 0, dir)) }
   onSwipeXEnd(dir) { this.swipe(new THREE.Vector3(1, 0, dir)) }
   onSwipeYStart(dir) { this.swipe(new THREE.Vector3(0, 1, dir)) }
   onSwipeYEnd(dir) { this.swipe(new THREE.Vector3(0, 1, dir)) }
-  
   onKeyPressed(event, isCombKey, isAnyKey) {
     this.key(event, isCombKey, isAnyKey)
 
@@ -1168,13 +1169,6 @@ export default class Xdraw extends Xapp {
     if (isAnyKey(['h']))
     {
       this.gui.hidden = !this.gui.hidden
-    }
-
-    // Toggle Stats
-    if (isAnyKey(['h']))
-    {
-      this.__isStatsShow = (this.__isStatsShow < 3) ? 3 : 0
-      this.__stats.showPanel(this.__isStatsShow)
     }
     
     // Toggle FullScreen
@@ -1212,7 +1206,7 @@ export default class Xdraw extends Xapp {
     this.__is_must_assets_loaded = true
   }
 
-  async loadAllAssetsAndMarkComplete() {
+  async loadNonMustAssetsAndMarkComplete() {
     await this.assetsManager.load()
     this.__is_all_assets_loaded = true
   }
@@ -1226,13 +1220,12 @@ export default class Xdraw extends Xapp {
     /**
      * Tiker
      */
-    this.tikerDispose()
+    this.tickerDispose()
 
     /**
      * Tweak pane
      */
     this.gui.dispose()
-    
 
     /**
      * Effect

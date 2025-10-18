@@ -77,7 +77,6 @@ export default defineConfig({
       output: {
         manualChunks: {
           'three': ['three'],    // separate Three.js into its own chunk
-          'gsap': ['gsap'],      // separate GSAP into its own chunk
           'vendor': ['emittery', 'ua-parser-js', 'maath', 'tweakpane'], // other libraries
           'rapier': ['@dimforge/rapier3d'] // separate Rapier3D physics engine
         }
