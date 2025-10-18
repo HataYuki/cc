@@ -25,7 +25,7 @@ import vertexShader from './shader/vertex.glsl'
 import fragmentShader from './shader/fragment.glsl'
 import passVertexShader from './shader/postProcessVertex.glsl'
 import passFragmentShader from './shader/postProcessFragment.glsl'
-
+  
 
 /**
  * main class
@@ -39,19 +39,12 @@ export default class App extends Xdraw{
     powerPreference: 'high-performance',  
     alpha: true
   }
-  assets = {
-    // envMapTexture1: { url: '/textures/environmentMaps/0/px.png', type: 'TEXTURE', must: true },
-    // envMapTexture2: { url: '/textures/environmentMaps/0/nx.png', type: 'TEXTURE', must: true },
-    // envMapTexture3: { url: '/textures/environmentMaps/0/py.png', type: 'TEXTURE', must: true },
-    // envMapTexture4: { url: '/textures/environmentMaps/0/ny.png', type: 'TEXTURE', must: true },
-    // envMapTexture5: { url: '/textures/environmentMaps/0/pz.png', type: 'TEXTURE', must: true },
-    // envMapTexture6: { url: '/textures/environmentMaps/0/nz.png', type: 'TEXTURE', must: true },
-  }
+  assets = {}
   params = {}
   scrollPos = new THREE.Vector2(0, 0)
   constructor(parser) { super(parser) }
   async appSetup() { 
-    this.camera.position.set(3, 3, 3)
+    this.camera.position.set(0, 0, 5)
 
     /**
      * ========= load must assets =========
@@ -65,49 +58,50 @@ export default class App extends Xdraw{
     const { } = this.assets
 
 
-    /**
-     * Models
+     /**
+     * ========= Model =========
      */
+    const gltfLoader = new GLTFLoader()
     const dracoLoader = new DRACOLoader()
     dracoLoader.setDecoderPath('/draco/')
-
-    const gltfLoader = new GLTFLoader()
     gltfLoader.setDRACOLoader(dracoLoader)
-    const test = gltfLoader.load('/models/Fox/glTF/Fox.gltf',
-      gltf => {
-        this.mixer = new THREE.AnimationMixer(gltf.scene)
-        const action = this.mixer.clipAction(gltf.animations[2])
-        action.play()
+    gltfLoader
+      .load('/models/Duck/glTF-Draco/Duck.gltf',
+        gltf =>
+        {
+          this.gltf = gltf
+          this.gltf.scene.position.y = -1.2
+          this.scene.add(this.gltf.scene)
+        }
+      )
 
-        gltf.scene.scale.set(0.025, 0.025, 0.025)
-        this.scene.add(gltf.scene)
-      }
-    )
 
     
     /**
      * ========= object =========
      */
+    const radius = 0.5
+    const distance = 2
+    const sphereGeometry = new THREE.SphereGeometry(radius, 32, 32)
+    
+    this.sphere0 = new THREE.Mesh(sphereGeometry, new THREE.MeshBasicMaterial({color:'#ff0000'}))
+    this.sphere0.position.x = distance
 
-    // Floor
-    this.floor = new THREE.Mesh(
-      new THREE.PlaneGeometry(10, 10),
-      new THREE.MeshStandardMaterial({
-        color: '#777777',
-        roughness: 0.4,
-        metalness:0.3,
-        envMap: this.envMapTexture,
-        envMapIntensity: 0.5
-      })
-    )
-    // this.floor.rotation.x = - Math.PI / 1.5
-    this.floor.quaternion
-      .setFromAxisAngle(
-        new THREE.Vector3(1, 0, 0),
-        - Math.PI / 2
-      )
+    this.sphere1 = new THREE.Mesh(sphereGeometry, new THREE.MeshBasicMaterial({color:'#ff0000'}))
+    
+    this.sphere2 = new THREE.Mesh(sphereGeometry, new THREE.MeshBasicMaterial({color:'#ff0000'}))
+    this.sphere2.position.x = - distance
 
-    this.scene.add(this.floor)
+    this.scene.add(this.sphere0, this.sphere1, this.sphere2)
+    this.sphere0.updateMatrixWorld()
+    this.sphere1.updateMatrixWorld()
+    this.sphere2.updateMatrixWorld()
+    
+    /**
+     * ====== Raycaster ======
+     */
+    this.raycaster = new THREE.Raycaster()
+    
 
 
     /**
@@ -126,7 +120,6 @@ export default class App extends Xdraw{
     /**
      * ========= Shadows =========
      */
-    this.floor.receiveShadow = true
     directionalLight.castShadow = true
 
     // Mapping
@@ -138,6 +131,31 @@ export default class App extends Xdraw{
     directionalLight.shadow.camera.right = 8
     directionalLight.shadow.camera.near = 1
     directionalLight.shadow.camera.far = 10
+
+
+    /**
+     * Click
+     */
+    window.addEventListener('click', () => {
+      if (this.currentIntersect)
+      {
+        switch (this.currentIntersect.object)
+        {
+          case this.sphere0:
+            console.log('click on shere 0')
+            break
+          
+          case this.sphere1:
+            console.log('click on shere 1')
+            break
+          
+          case this.sphere2:
+            console.log('click on shere 2')
+            break
+        }
+        
+      }
+    })
 
     /**
      * ========= load non must assets =========
@@ -158,8 +176,60 @@ export default class App extends Xdraw{
     }))
   }
   draw(time, deltaTime) {
-    // this.mixer.update()
-    if(this.mixer) this.mixer.update(deltaTime)
+    // Animate Object
+    this.sphere0.position.y = Math.sin(time * 0.3) * 1.5
+    this.sphere1.position.y = Math.sin(time * 0.8) * 1.5
+    this.sphere2.position.y = Math.sin(time * 1.4) * 1.5
+
+    const cursor = this.cursorPosition.clone()
+    cursor
+      .divide(this.viewSize)
+      .multiply(new THREE.Vector2(2, -2))
+      .add(new THREE.Vector2(-1, 1))
+    
+    // Cast a ray
+    this.raycaster.setFromCamera(cursor,this.camera)
+    
+    const objectsToTest = [this.sphere0, this.sphere1, this.sphere2]
+    const intersects = this.raycaster.intersectObjects(objectsToTest)
+    for (const object of objectsToTest)
+    {
+      object.material.color.set('#ff0000')
+    }
+    for (const intersect of intersects)
+    {
+      intersect.object.material.color.set('#0000ff')
+    }
+
+    
+    if (intersects.length)
+    {
+      if (!this.currentIntersect)
+      {
+        console.log('mouse enter')
+      }
+      this.currentIntersect ??= intersects[0]
+    } else
+    {
+      if (this.currentIntersect)
+      {
+        console.log('mouse leave')
+      }
+      delete this.currentIntersect
+    }
+
+    // Intersect with model
+    if (this.gltf) {
+      const modelIntersect = this.raycaster.intersectObject(this.gltf.scene)
+      
+      if (modelIntersect.length)
+      {
+        this.gltf.scene.scale.set(1.2,1.2,1.2)
+      } else
+      {
+        this.gltf.scene.scale.set(1,1,1)
+      }
+    }
   }
 }
 

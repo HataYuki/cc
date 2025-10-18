@@ -861,7 +861,7 @@ class Xapp {
       this.scrollManager.consumeScrollUpdate(this, Xapp.SCROLL_FRAG)
       this.swipeManager.consumeSwipeX(this, Xapp.SWIPE_X_FRAG)
       this.swipeManager.consumeSwipeY(this, Xapp.SWIPE_Y_FRAG)
-  this.cursorManager.consumeCursorUpdate(this, Xapp.CURSOR_MOVE_FRAG)
+      this.cursorManager.consumeCursorUpdate(this, Xapp.CURSOR_MOVE_FRAG)
 
       this.viewSize = this.viewportManager.size
       this.scrollDelta = this.scrollManager.delta
