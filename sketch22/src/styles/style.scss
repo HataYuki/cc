@@ -1,0 +1,45 @@
+:root {
+  font-family: "Noto Sans JP", sans-serif;
+  font-optical-sizing: auto;
+  color: white;
+  line-height: 1.4;
+  font-weight: 400;
+  font-size: 16px;
+}
+
+body,
+html,
+canvas {
+  box-sizing: border-box;
+  width: 100dvw;
+  height: 100dvh;
+}
+
+* {
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+.webgl {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  background-color: black;
+}
+
+.main {
+  pointer-events: none;
+  width: 100%;
+  min-height: 100dvh;
+}
+
+/* Tweakpane幅設定（CSS変数使用） */
+.tp-dfwv {
+  position: fixed !important;
+  width: var(--tweakpane-width, 320px) !important;
+}
+
+.tp-fldv {
+  width: 100% !important;
+}
