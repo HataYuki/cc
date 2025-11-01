@@ -1,259 +1,186 @@
 /**
- * Template
+ * Styles
  */
-import Xdraw from './core/__utils.js'
+import './styles/destyle.css'
+import './styles/tailwind.css'
+import './styles/style.scss'
+
+/**
+ * Tweak pane
+ */
+import { Pane } from 'tweakpane'
+import * as EssentialsPlugin from '@tweakpane/plugin-essentials'
 
 /**
  * Three
  */
 import * as THREE from 'three'
-import gsap from 'gsap'
-import { Sky } from 'three/addons/objects/Sky.js'
-import { RectAreaLightHelper } from 'three/examples/jsm/helpers/RectAreaLightHelper.js'
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
-import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { HDRLoader } from 'three/addons/loaders/HDRLoader.js'
-import { GroundedSkybox } from 'three/addons/objects/GroundedSkybox.js'
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 
 /**
- * maath
+ * Loader
  */
-import { damp, damp2 } from 'maath/easing'
+const hdrLoader = new HDRLoader()
+const gltfLoader = new GLTFLoader()
 
 /**
- * shader
+ * Canvas
  */
-import vertexShader from './shader/vertex.glsl'
-import fragmentShader from './shader/fragment.glsl'
-import passVertexShader from './shader/postProcessVertex.glsl'
-import passFragmentShader from './shader/postProcessFragment.glsl'
+const canvas = document.getElementById('webgl')
+const size = new THREE.Vector2(window.innerWidth, window.innerHeight)
+const pr = Math.min(devicePixelRatio, 2)
+let aspect = size.x / size.y
 
 /**
- * main class
+ * Scene
  */
-export default class App extends Xdraw {
-  PIXEL_RATIO = 2
-  TWEAK_WIDTH = 250
-  RENDERER_OPT = {
-    preserveDrawingBuffer: false,
-    antialias: false,
-    powerPreference: 'high-performance',
-    alpha: true,
-  }
-  assets = {}
-  params = {}
-  scrollPos = new THREE.Vector2(0, 0)
-  constructor(parser) {
-    super(parser)
-  }
-  async appSetup() {
-    this.camera.position.set(3, 3, 4)
-    this.controls.target = new THREE.Vector3(0, 3.5, 0)
+const scene = new THREE.Scene()
 
-    /**
-     * Loaer
-     */
-    const gltfLoader = new GLTFLoader()
-    const dracoLoader = new DRACOLoader()
-    const cubeTextureLoader = new THREE.CubeTextureLoader()
-    const hdrLoader = new HDRLoader()
-    const textureLoader = new THREE.TextureLoader()
-    hdrLoader.setDataType(THREE.FloatType)
-    dracoLoader.setDecoderPath('/draco/')
-    gltfLoader.setDRACOLoader(dracoLoader)
+/**
+ * Camera
+ */
+const camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 100)
+camera.position.set(4, 5, 4)
+scene.add(camera)
 
-    /**
-     * ========= load must assets =========
-     */
-    await this.loadMustAssetsAndMarkComplete()
+/**
+ * Controls
+ */
+const controls = new OrbitControls(camera, canvas)
+controls.target.y = 3.5
+controls.enableDamping = true
 
-    /**
-     * ========= Assets =========
-     */
-    const {} = this.assets
+/**
+ * Resize
+ */
+window.addEventListener('resize', () => {
+  // Update window size
+  size.set(window.innerWidth, window.innerHeight)
+  // Update aspect
+  aspect = size.x / size.y
+  // Update camera
+  camera.aspect = aspect
+  camera.updateProjectionMatrix()
+  // Update renderer
+  renderer.setSize(size.x, size.y)
+  renderer.setPixelRatio(pr)
+})
 
-    /**
-     * Emviroment map
-     */
-    // LDR cube texture
-    // const enviromentMap = cubeTextureLoader.load([
-    //   'textures/environmentMaps/0/px.png',
-    //   'textures/environmentMaps/0/nx.png',
-    //   'textures/environmentMaps/0/py.png',
-    //   'textures/environmentMaps/0/ny.png',
-    //   'textures/environmentMaps/0/pz.png',
-    //   'textures/environmentMaps/0/nz.png',
-    // ])
-    // this.scene.environment = enviromentMap
-    // this.scene.background = enviromentMap
-    // this.scene.backgroundIntensity = 17
-    // this.scene.environmentIntensity = 12
-    // this.scene.backgroundBlurriness = 0.05
+/**
+ * environment
+ */
+hdrLoader.load('textures/environmentMaps/blender-2k.hdr', envMap => {
+  envMap.mapping = THREE.EquirectangularReflectionMapping
+  scene.background = envMap
+  // scene.environment = envMap
+})
 
-    // HDR equirectangular
-    hdrLoader.load(
-      // 'textures/environmentMaps/0/studio_small_01_2k.hdr',
-      'textures/environmentMaps/blender-2k.hdr',
-      environmentMap => {
-        environmentMap.mapping = THREE.EquirectangularReflectionMapping
-        environmentMap.colorSpace = THREE.SRGBColorSpace
-        // this.scene.environment = environmentMap
-        this.scene.background = environmentMap
-      }
-    )
+/**
+ * Model
+ */
+gltfLoader.load('models/FlightHelmet/glTF/FlightHelmet.gltf', gltf => {
+  gltf.scene.scale.set(10, 10, 10)
+  scene.add(gltf.scene)
+})
 
-    // Ground projected skybox
-    // hdrLoader.load('textures/environmentMaps/1/2k.hdr', environment => {
-    //   environment.mapping = THREE.EquirectangularReflectionMapping
-    //   // this.scene.background = environment
-    //   this.scene.environment = environment
+/**
+ * Mesh
+ */
+const torusKnot = new THREE.Mesh(
+  new THREE.TorusKnotGeometry(1, 0.4, 64, 64),
+  new THREE.MeshStandardMaterial({
+    roughness: 0.1,
+    metalness: 1,
+    color: new THREE.Color(1, 1, 1),
+  })
+)
+torusKnot.position.x = -4
+torusKnot.position.y = 4
+scene.add(torusKnot)
 
-    //   // SSAOが有効だとskyboxに変な影が出る。
-    //   this.effectComposer.passes[2].enabled = false
+/**
+ * Holy donut
+ */
+const donut = new THREE.Mesh(
+  new THREE.TorusGeometry(8, 0.5, 128, 128),
+  new THREE.MeshBasicMaterial({ color: new THREE.Color('rgb(255,255,255)') })
+)
+donut.position.set(0, 3.5, 0)
+donut.layers.enable(1)
+scene.add(donut)
 
-    //   // Skybox
-    //   const skybox = new GroundedSkybox(environment, 15, 70, 32)
-    //   // skybox.material.wireframe = true
-    //   skybox.position.y = 15
-    //   this.scene.add(skybox)
-    // })
+/**
+ * Cube render target
+ */
+const cubuRenderTarget = new THREE.WebGLCubeRenderTarget(128, {
+  type: THREE.HalfFloatType,
+})
+scene.environment = cubuRenderTarget.texture
 
-    /**
-     * Real time environment map
-     */
-    // const environmentMap = textureLoader.load(
-    //   'textures/environmentMaps/blockadesLabsSkybox/interior_views_cozy_wood_cabin_with_cauldron_and_p.jpg'
-    // )
-    // environmentMap.mapping = THREE.EquirectangularReflectionMapping
-    // environmentMap.colorSpace = THREE.SRGBColorSpace
+/**
+ * Cube camera
+ */
+const cubeCamera = new THREE.CubeCamera(0.1, 100, cubuRenderTarget)
+cubeCamera.layers.set(1)
 
-    // this.scene.background = environmentMap
+/**
+ * Renderer
+ */
+const renderer = new THREE.WebGLRenderer({
+  canvas,
+})
+renderer.setSize(size.x, size.y, false)
+renderer.setPixelRatio(pr)
 
-    // Holy donut
-    this.holyDonut = new THREE.Mesh(
-      new THREE.TorusGeometry(8, 0.5),
-      new THREE.MeshBasicMaterial({ color: new THREE.Color(10, 4, 2) })
-    )
-    this.holyDonut.position.y = 3.5
-    this.holyDonut.layers.enable(1)
-    this.scene.add(this.holyDonut)
+/**
+ * Tweak pane
+ */
+const tweak = new Pane({ title: 'Parameters', expanded: true })
+const tweakWidth = 250
+tweak.registerPlugin(EssentialsPlugin)
+document.documentElement.style.setProperty(
+  '--tweakpane-width',
+  `${tweakWidth}px`
+)
+// Fps
+const fpsGraph = tweak.addBlade({
+  view: 'fpsgraph',
+  label: 'fps',
+  rows: 2,
+})
 
-    // Cube render target
-    const cubeRenderTarget = new THREE.WebGLCubeRenderTarget(256, {
-      type: THREE.HalfFloatType,
-    })
+tweak.addBinding(scene, 'environmentIntensity', {
+  min: 1,
+  max: 10,
+  step: 0.001,
+})
+tweak.addBinding(scene.backgroundRotation, 'y', {
+  min: 0,
+  max: Math.PI * 2,
+  step: 0.001,
+})
 
-    this.scene.environment = cubeRenderTarget.texture
+const clock = new THREE.Clock()
+const tick = () => {
+  // begin Fps
+  fpsGraph.begin()
 
-    // Cube camera
-    this.cubeCamera = new THREE.CubeCamera(0.1, 100, cubeRenderTarget)
-    this.cubeCamera.layers.set(1)
+  // Time
+  const time = clock.getElapsedTime()
 
-    /**
-     * ========= object =========
-     */
-    const torusKnot = new THREE.Mesh(
-      new THREE.TorusKnotGeometry(1, 0.3, 128, 128),
-      new THREE.MeshStandardMaterial({
-        roughness: 0.1,
-        metalness: 1,
-        color: 0xaaaaaa,
-      })
-    )
-    torusKnot.position.x = -4
-    torusKnot.position.y = 4
-    this.scene.add(torusKnot)
+  // Real-time environment map
+  donut.rotation.x = Math.sin(time) * 2
+  cubeCamera.update(renderer, scene)
 
-    /**
-     * ========= Model =========
-     */
-    gltfLoader.load('models/FlightHelmet/glTF/FlightHelmet.gltf', gltf => {
-      gltf.scene.scale.set(10, 10, 10)
-      gltf.scene.traverse(object => console.log(object.name))
-      // gltf.scene.getObjectByName('RubberWood_low').visible = false
-      this.scene.add(gltf.scene)
-    })
-
-    /**
-     * ========= light =========
-     */
-    // ambient
-    // const ambientLight = new THREE.AmbientLight('#ffffff', 1)
-    // this.scene.add(ambientLight)
-
-    // Directional light
-    // const directionalLight = new THREE.DirectionalLight('#ffffff', 2)
-    // directionalLight.position.set(1, 1, 0)
-    // this.scene.add(directionalLight)
-
-    /**
-     * ========= Shadows =========
-     */
-    // directionalLight.castShadow = true
-
-    // Mapping
-    // directionalLight.shadow.mapSize.width = Math.pow(2, 8)
-    // directionalLight.shadow.mapSize.height = Math.pow(2, 8)
-    // directionalLight.shadow.camera.top = 8
-    // directionalLight.shadow.camera.bottom = -8
-    // directionalLight.shadow.camera.left = -8
-    // directionalLight.shadow.camera.right = 8
-    // directionalLight.shadow.camera.near = 1
-    // directionalLight.shadow.camera.far = 10
-
-    /**
-     * ========= load non must assets =========
-     */
-    await this.loadNonMustAssetsAndMarkComplete()
-  }
-  tweak(gui) {
-    // this.scene.environmentIntensity
-    const scene = gui.addFolder({ title: 'scene' })
-    scene.addBinding(this.scene, 'environmentIntensity', {
-      min: 1,
-      max: 20,
-      step: 0.001,
-    })
-    scene.addBinding(this.scene, 'backgroundIntensity', {
-      min: 1,
-      max: 20,
-      step: 0.001,
-    })
-    scene.addBinding(this.scene, 'backgroundBlurriness', {
-      min: 0,
-      max: 1,
-      step: 0.001,
-    })
-    scene.addBinding(this.scene.backgroundRotation, 'y', {
-      min: 0,
-      max: Math.PI * 2,
-      step: 0.001,
-    })
-    scene.addBinding(this.scene.environmentRotation, 'y', {
-      min: 0,
-      max: Math.PI * 2,
-      step: 0.001,
-    })
-    // scene.on('change', () => {
-    //   this.scene.environmentRotation.y = this.scene.backgroundRotation.y
-    // })
-  }
-  effect(addPass, ShaderPass) {
-    /**
-     * ========= Base Post-Process shader =========
-     */
-    addPass(
-      new ShaderPass({
-        uniforms: { tDiffuse: { value: null } },
-        vertexShader: passVertexShader,
-        fragmentShader: passFragmentShader,
-      })
-    )
-  }
-  draw(time, deltaTime) {
-    if (this.holyDonut) {
-      this.holyDonut.rotation.x = Math.sin(time) * 2
-      this.cubeCamera.update(this.renderer, this.scene)
-    }
-  }
+  // Update controls
+  controls.update()
+  // Rendering
+  renderer.render(scene, camera)
+  // Fps end
+  fpsGraph.end()
+  // Tick
+  requestAnimationFrame(tick)
 }
+tick()
