@@ -82,6 +82,12 @@ hdrLoader.load('textures/environmentMaps/blender-2k.hdr', envMap => {
  */
 gltfLoader.load('models/FlightHelmet/glTF/FlightHelmet.gltf', gltf => {
   gltf.scene.scale.set(10, 10, 10)
+  gltf.scene.traverse(object => {
+    if (object.isMesh) {
+      object.castShadow = true
+      object.receiveShadow = true
+    }
+  })
   scene.add(gltf.scene)
 })
 
@@ -96,6 +102,7 @@ const torusKnot = new THREE.Mesh(
     color: new THREE.Color(1, 1, 1),
   })
 )
+torusKnot.castShadow = true
 torusKnot.position.x = -4
 torusKnot.position.y = 4
 scene.add(torusKnot)
@@ -110,6 +117,7 @@ const donut = new THREE.Mesh(
 donut.position.set(0, 3.5, 0)
 donut.layers.enable(1)
 scene.add(donut)
+
 
 /**
  * Cube render target
@@ -126,12 +134,24 @@ const cubeCamera = new THREE.CubeCamera(0.1, 100, cubuRenderTarget)
 cubeCamera.layers.set(1)
 
 /**
+ * Light
+ */
+const directionalLight = new THREE.DirectionalLight(
+  new THREE.Color('rgb(255,255,255)')
+)
+directionalLight.intensity = 1
+directionalLight.castShadow = true
+directionalLight.position.set(3, 5, 3)
+scene.add(directionalLight)
+
+/**
  * Renderer
  */
 const renderer = new THREE.WebGLRenderer({
   canvas,
 })
 renderer.setSize(size.x, size.y, false)
+renderer.shadowMap.enabled = true
 renderer.setPixelRatio(pr)
 
 /**
@@ -161,6 +181,7 @@ tweak.addBinding(scene.backgroundRotation, 'y', {
   max: Math.PI * 2,
   step: 0.001,
 })
+tweak.addBinding(directionalLight, 'intensity', { min: 0, max: 100, step: 0.1 })
 
 const clock = new THREE.Clock()
 const tick = () => {
