@@ -1,0 +1,14 @@
+@import 'destyle.css';
+
+* {
+    box-sizing: border-box;
+}
+
+body,html,#webgl{
+  width: 100dvw;
+  ∂∂height: 100dvh;
+}
+
+#webgl{
+  vertical-align: bottom;
+}
