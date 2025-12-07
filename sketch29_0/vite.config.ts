@@ -1,6 +1,5 @@
 import { defineConfig } from 'vite'
-import { visualizer } from 'rollup-plugin-visualizer'
-
+import glsl from 'vite-plugin-glsl'
 
 export default defineConfig({
   server: {
@@ -9,20 +8,18 @@ export default defineConfig({
   build: {
     minify: 'terser',
     terserOptions: {
-      module: true,
-      compress: {
-        unused: true,
-        dead_code: true
-      }
+      compress: true,
     },
     rollupOptions: {
-      plugins: [visualizer({ filename: 'stats.html' })],
       output: {
         manualChunks: {
           three: ['three'],
-          tweakpane: ['tweakpane']
         },
       },
     },
   },
+  plugins:
+    [
+      glsl()
+    ]
 })

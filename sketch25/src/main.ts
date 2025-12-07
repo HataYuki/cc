@@ -1,13 +1,13 @@
 import './style.scss'
-import Experience from './Experience/Experience'
+import Game from './Game/Game'
 
-const experience = Experience.getInstance(
+const game = Game.getInstance(
     document.getElementById('webgl') as HTMLCanvasElement,
 )
 
 window.addEventListener('beforeunload',()=>
 {
-    experience.destory()
+    game.destory()
 })
 
 

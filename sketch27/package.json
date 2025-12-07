@@ -6,24 +6,22 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview",
-    "lint": "eslint src/**/*.ts",
-    "lint:fix": "eslint src/**/*.ts --fix"
+    "preview": "vite preview"
   },
   "devDependencies": {
     "@tweakpane/core": "^2.0.5",
     "@types/three": "^0.181.0",
-    "rollup-plugin-visualizer": "^6.0.5",
     "sass": "^1.93.3",
     "terser": "^5.44.0",
     "typescript": "~5.9.3",
-    "vite": "^7.1.7"
+    "vite": "^7.1.7",
+    "vite-plugin-glsl": "^1.5.4"
   },
   "dependencies": {
     "@tweakpane/plugin-essentials": "^0.2.1",
     "destyle.css": "^4.0.1",
-    "emittery": "^1.2.0",
     "three": "^0.181.0",
+    "tsl-textures": "^2.5.1",
     "tweakpane": "^4.0.5"
   }
 }
