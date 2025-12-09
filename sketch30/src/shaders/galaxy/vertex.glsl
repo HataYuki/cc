@@ -23,8 +23,7 @@
     vec4 modelPosition = modelMatrix * vec4(position, 1.0);
 
     float angle = atan(modelPosition.x, modelPosition.z);
-    // float distanceToCenter = length(modelPosition.xz);
-    float distanceToCenter = distance(modelPosition.xyz, vec3(0.0));
+    float distanceToCenter = length(modelPosition.xz);
     float angleOffset = (1.0 / distanceToCenter) * uTime * 0.2;
     angle += angleOffset;
     modelPosition.x = sin(angle) * distanceToCenter;

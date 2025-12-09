@@ -96,8 +96,8 @@ const parameters = {
   branches: 3,
   randomness: 0.4,
   randomnessPower: 2,
-  insideColor: '#ff6030',
-  outsideColor: '#1b3984'
+  insideColor: '#e61818',
+  outsideColor: '#0ca900'
 }
 
 let geometry:THREE.BufferGeometry | null  = null
