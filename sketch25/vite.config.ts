@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import { visualizer } from 'rollup-plugin-visualizer'
+import { glsl } from 'vite-plugin-glsl'
 
 
 export default defineConfig({
@@ -16,7 +17,7 @@ export default defineConfig({
       }
     },
     rollupOptions: {
-      plugins: [visualizer({ filename: 'stats.html' })],
+      plugins: [visualizer({ filename: 'stats.html' }), glsl()],
       output: {
         manualChunks: {
           three: ['three'],
