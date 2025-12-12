@@ -46,7 +46,7 @@ envmap.colorSpace = THREE.SRGBColorSpace
 const diffuseMap = await textureLoader.loadAsync('models/LeePerrySmith/Map-COL.jpg')
 diffuseMap.colorSpace = THREE.SRGBColorSpace
 
-const specularMap = await textureLoader.loadAsync('models/LeePerrySmith/Map-SPEC.jpg')
+const normalMap = await textureLoader.loadAsync('models/LeePerrySmith/Infinite-Level_02_Tangent_SmoothUV.jpg')
 
 /**
  * Load gltf
@@ -113,14 +113,92 @@ window.addEventListener('resize', () => {
 /**
  * LeePerry
  */
+const material = new THREE.MeshStandardMaterial({
+  map: diffuseMap,
+  normalMap: normalMap
+})
+const depthMaterial = new THREE.MeshDepthMaterial({
+  depthPacking: THREE.RGBADepthPacking
+})
+const customUniforms = {
+  uTime: { value: 0 }
+}
+
+material.onBeforeCompile = shader =>
+{
+  shader.uniforms.uTime = customUniforms.uTime
+  shader.vertexShader = shader.vertexShader
+    .replace(
+      '#include <common>',
+    `
+    #include <common>
+    uniform float uTime;
+
+    mat2 get2dRotateMatrix(float _angle)
+    {
+        return mat2(cos(_angle), - sin(_angle), sin(_angle), cos(_angle));
+    }
+    `
+  )
+  shader.vertexShader = shader.vertexShader
+    .replace(
+      '#include <beginnormal_vertex>',
+    `
+    #include <beginnormal_vertex>
+    float angle = sin(position.y + uTime * 2.0)* 0.9;
+    mat2 rotateMatrix = get2dRotateMatrix(angle);
+
+    objectNormal.xz *= rotateMatrix;
+    `
+  )
+  shader.vertexShader = shader.vertexShader
+    .replace(
+      '#include <begin_vertex>',
+    `
+    #include <begin_vertex>
+
+    transformed.xz *= rotateMatrix;
+    `
+  )
+}
+
+depthMaterial.onBeforeCompile = shader =>
+{
+  shader.uniforms.uTime = customUniforms.uTime
+  shader.vertexShader = shader.vertexShader
+    .replace(
+      '#include <common>',
+      `
+      #include <common>
+      uniform float uTime;
+
+      mat2 get2dRotateMatrix(float _angle)
+      {
+          return mat2(cos(_angle), - sin(_angle), sin(_angle), cos(_angle));
+      }
+      `
+  )
+  shader.vertexShader = shader.vertexShader
+    .replace(
+      '#include <begin_vertex>',
+    `
+    #include <begin_vertex>
+
+    float angle = sin(position.y + uTime * 2.0)* 0.9;
+    mat2 rotateMatrix = get2dRotateMatrix(angle);
+
+    transformed.xz *= rotateMatrix;
+    `
+  )
+}
+
 gltf.scene.traverse(obj =>
 {
   if (obj instanceof THREE.Mesh)
   {
-    obj.material = new THREE.MeshStandardMaterial({
-      map: diffuseMap,
-    })
+    obj.material = material
     obj.receiveShadow = true
+    obj.customDepthMaterial = depthMaterial
     obj.castShadow = true
   }
 })
@@ -198,11 +276,14 @@ const tweak = pane.addFolder({ title: 'LeePerry' })
  * Animation
  */
 const clock = new THREE.Clock()
+
 const tick = () => {
   // Fps begin
   fps.begin()
   // Time
   const time = clock.getElapsedTime()
+  // Update material
+  customUniforms.uTime.value = time
   // Update controls
   controls.update()
   // Rendering

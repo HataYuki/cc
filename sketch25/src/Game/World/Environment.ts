@@ -10,6 +10,7 @@ export default class Environment
 
     private environmentMap: Datatype<'ktx2'>
     private sunLight: THREE.DirectionalLight
+    private sunLightHelper: THREE.CameraHelper
 
     constructor()
     {
@@ -19,6 +20,7 @@ export default class Environment
         this.tweak = this.experience.tweak
 
         this.sunLight = this.initSunLight()
+        this.sunLightHelper = this.initSunLightHelper()
         this.environmentMap = this.initEnvironmentMap()
 
         if(this.tweak.gui)
@@ -30,8 +32,10 @@ export default class Environment
             guiEnvironment.addBinding(this.sunLight.position, 'x', {label:'sun pos x', min:0, max:10, step:0.001})
             guiEnvironment.addBinding(this.sunLight.position, 'y', {label:'sun pos y', min:0, max:10, step:0.001})
             guiEnvironment.addBinding(this.sunLight.position, 'z', { label: 'sun pos x', min: 0, max: 10, step: 0.001 })
+            guiEnvironment.addBinding(this.scene, 'environmentIntensity', { min: 0, max: 4, step: 0.01 })
             
-            guiEnvironment.addBinding(this.scene, 'environmentIntensity', {min:0, max:4, step:0.01})
+            const sunLightHelperBtn = guiEnvironment.addButton({ title: 'sun light helper' })
+            sunLightHelperBtn.on('click',() => this.sunLightHelper.visible = !this.sunLightHelper.visible)
         }
     }
 
@@ -41,7 +45,7 @@ export default class Environment
         const mapSize = Math.pow(2, 9)
         directionalLight.shadow.mapSize.set(mapSize, mapSize)
         directionalLight.castShadow = true
-        directionalLight.shadow.camera.far = 15
+        directionalLight.shadow.camera.far = 18
         directionalLight.shadow.bias = 0.05
         directionalLight.position.set(3.5, 2, -1.25)
 
@@ -50,13 +54,23 @@ export default class Environment
         return directionalLight
     }
 
+    private initSunLightHelper()
+    {
+        const helper = new THREE.CameraHelper(
+            this.sunLight.shadow.camera
+        )
+        this.scene.add(helper)
+
+        return helper
+    }
+
     private initEnvironmentMap()
     {
         
         this.environmentMap = this.resources.items.envTextureKtx
         this.environmentMap.flipY = true
         this.environmentMap.mapping = THREE.EquirectangularReflectionMapping
-        // this.environmentMap.colorSpace = SRGBColorSpace
+        this.environmentMap.colorSpace = THREE.LinearSRGBColorSpace
         this.scene.environment = this.environmentMap
         this.scene.background = this.environmentMap
         

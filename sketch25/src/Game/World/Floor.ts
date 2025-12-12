@@ -33,6 +33,8 @@ export default class Floor
         return new THREE.MeshStandardMaterial({
             map: this.texture.color,
             normalMap: this.texture.normal,
+            roughness: 1.0,
+            metalness: 0.0
         })
     }
     initTexture()

@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import Experience from '../Game'
+import Game from '../Game'
 type AnimationMap<T extends string> = {
     mixer: THREE.AnimationMixer
     actions: { [N in T]: THREE.AnimationAction }
@@ -9,7 +9,7 @@ type AnimationType = AnimationMap<'idle' | 'walking' | 'running' | 'current'>
 
 export default class Fox
 {
-    private experience: Experience
+    private game: Game
     private scene: THREE.Scene
     private resources: IResources
     private tweak: ITweak
@@ -21,12 +21,12 @@ export default class Fox
 
     constructor()
     {
-        this.experience = Experience.getInstance()
-        this.scene = this.experience.scene
-        this.resources = this.experience.resources
+        this.game = Game.getInstance()
+        this.scene = this.game.scene
+        this.resources = this.game.resources
         this.resource = this.resources.items.foxModel
-        this.renderer = this.experience.renderer
-        this.tweak = this.experience.tweak
+        this.renderer = this.game.renderer
+        this.tweak = this.game.tweak
 
         this.model = this.initModel()
         this.animation = this.initAnimation()
@@ -48,7 +48,6 @@ export default class Fox
     initModel()
     {
         const model = this.resource.scene
-
         model.scale.set(0.02, 0.02, 0.02)
         model.traverse(child =>
         {

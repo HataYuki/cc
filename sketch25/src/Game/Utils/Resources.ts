@@ -48,9 +48,6 @@ export default class Resources extends THREE.EventDispatcher<EventMap>
 
         return {
             gltf: gltfLoader,
-            // texture: new THREE.TextureLoader(this.loadingManager),
-            // cubeTexture:  new THREE.CubeTextureLoader(this.loadingManager),
-            // hdr: new HDRLoader(),
             ktx2: ktx2Loader
         }
     }

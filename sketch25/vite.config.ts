@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite'
 import { visualizer } from 'rollup-plugin-visualizer'
-import { glsl } from 'vite-plugin-glsl'
+import glsl from 'vite-plugin-glsl'
 
 
 export default defineConfig({

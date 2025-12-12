@@ -1,43 +1,43 @@
 import * as THHREE from 'three'
-import Game from "./Game";
+import Game from "../../Game";
+import Input from './Input';
 
-type Events = 'scrollstart' | 'scrollEnd' 
-type EventMap = { [N in Events]: { _: undefined } }
-    & { scrollX: { dir: 'x' } } & { scrollY: {dir: 'y'} }
-interface Option {
+export type NavigateEventNames = 'scroll'
+export type NavigateEvents =  { [N in NavigateEventNames]: { axis: 'x' | 'y', dir: 1 | -1 | 0 }}
+export interface NavigateOption {
     wheelMul: number
     touchMul: number
-    applyScroll: boolean
 }
 interface Pos<T> { x: T, y: T }
 
-export default class Navigate extends THHREE.EventDispatcher<EventMap>
+export default class Navigate extends THHREE.EventDispatcher<NavigateEvents>
 {
     private static LINE_HEIGHT = 100 / 6
     private startTouchedPos: Pos<number> = { x: 0, y: 0 }
+    private __delta: Pos<number> = { x: 0, y: 0 }
     private __value: Pos<number> = { x: 0, y: 0 }
-    private option: Option = {
+    private option: NavigateOption = {
         wheelMul: 1,
         touchMul: 1,
-        applyScroll: false
     }
     private game: Game
-    private renderer: IRenderer
+    private input: Input
     private tweak: ITweak
     
     delta: Pos<number> = { x: 0, y: 0 }
+    velocity: Pos<number> = { x: 0, y: 0 }
     value: Pos<number> = { x: 0, y: 0 }
 
     on = this.addEventListener.bind(this)
 
-    constructor(option: Partial<Option>)
+    constructor(option: Partial<NavigateOption>)
     {
         super()
 
         this.option = { ...this.option, ...option }
 
         this.game = Game.getInstance()
-        this.renderer = this.game.renderer
+        this.input = Input.getInstance()
         this.tweak = this.game.tweak
 
         window.addEventListener('wheel', this.wheel, { passive: false })
@@ -54,7 +54,7 @@ export default class Navigate extends THHREE.EventDispatcher<EventMap>
         }
     }
 
-    wheel = (event:WheelEvent) =>
+    private wheel = (event:WheelEvent) =>
     {
         event.preventDefault()
 
@@ -71,14 +71,14 @@ export default class Navigate extends THHREE.EventDispatcher<EventMap>
         deltaX *= mulX, deltaY *= mulY
         deltaX *= wheelMul, deltaY *= wheelMul
 
-        this.delta.x = deltaX
-        this.delta.y = deltaY
+        this.__delta.x = deltaX
+        this.__delta.y = deltaY
 
         this.__value.x += deltaX
         this.__value.y += deltaY
     }
 
-    touch = (event:TouchEvent) =>
+    private touch = (event:TouchEvent) =>
     {
         event.preventDefault()
         const touches = event.changedTouches
@@ -98,8 +98,8 @@ export default class Navigate extends THHREE.EventDispatcher<EventMap>
             this.__value.x += deltaX
             this.__value.y += deltaY
 
-            this.delta.x = deltaX
-            this.delta.y = deltaY
+            this.__delta.x = deltaX
+            this.__delta.y = deltaY
 
             this.startTouchedPos.x = 0
             this.startTouchedPos.y = 0
@@ -112,8 +112,8 @@ export default class Navigate extends THHREE.EventDispatcher<EventMap>
             this.__value.x += deltaX
             this.__value.y += deltaY
 
-            this.delta.x = deltaX
-            this.delta.y = deltaY
+            this.__delta.x = deltaX
+            this.__delta.y = deltaY
 
             this.startTouchedPos.x = clientX
             this.startTouchedPos.y = clientY
@@ -121,7 +121,7 @@ export default class Navigate extends THHREE.EventDispatcher<EventMap>
     }
 
     // https://github.com/pmndrs/maath/blob/main/packages/maath/src/easing.ts
-    damp(
+    private damp(
         /** The object */
         current: { [key: string]: any },
         /** The key to animate */
@@ -132,7 +132,7 @@ export default class Navigate extends THHREE.EventDispatcher<EventMap>
         smoothTime = 0.25,
         /** Frame delta, for refreshrate independence */
         delta = 0.01,
-        /** Optionally allows you to clamp the maximum speed. If smoothTime is 0.25s and looks OK
+        /** NavigateOptionally allows you to clamp the maximum speed. If smoothTime is 0.25s and looks OK
          *  going between two close points but not for points far apart as it'll move very rapid,
          *  then a maxSpeed of e.g. 1 which will clamp the speed to 1 unit per second, it may now
          *  take much longer than smoothTime to reach the target if it is far away. */
@@ -173,15 +173,29 @@ export default class Navigate extends THHREE.EventDispatcher<EventMap>
         return true;
     }
 
-    update() {
-        const { delta } = this.renderer
-        
+    private decay()
+    {
+        // Decay
+        if (Math.abs(this.__delta.x) > 0 || Math.abs(this.__delta.y) > 0)
+        {
+            this.__delta.x *= 0.95
+            this.__delta.y *= 0.95
+            
+            this.__value.x += this.__delta.x
+            this.__value.y += this.__delta.y
+
+            if(Math.abs(this.__delta.x) < 0.001) this.__delta.x = 0
+            if(Math.abs(this.__delta.y) < 0.001) this.__delta.y = 0
+        }
+    }
+
+    update() { 
         const isScrollX = this.damp(
             this.value,
             'x',
             this.__value.x,
             0.25,
-            delta,
+            this.input.deltaTime,
             Infinity
         )
         const isScrollY = this.damp(
@@ -189,36 +203,36 @@ export default class Navigate extends THHREE.EventDispatcher<EventMap>
             'y',
             this.__value.y,
             0.25,
-            delta,
+            this.input.deltaTime,
             Infinity
         )
 
-        // Decay
-        if (Math.abs(this.delta.x) > 0 || Math.abs(this.delta.y) > 0)
-        {
-            let { x, y } = this.delta
+        this.decay()
 
-            x *= 0.95
-            y *= 0.95
+        this.delta.x = this.__value.x - this.value.x
+        this.delta.y = this.__value.y - this.value.y
 
-            this.__value.x += x
-            this.__value.y += x
-
-            if(x <= 0.1) this.delta.x = 0
-            if(y <= 0.1) this.delta.y = 0
-        }
-
+        const dirX = (this.delta.x > 0) ? 1 :
+                     (this.delta.x < 0) ? -1 :
+                     0
+        const dirY = (this.delta.y > 0) ? 1 :
+                     (this.delta.y < 0) ? -1 :
+                     0
+        
+        this.velocity.x = this.delta.x / this.input.deltaTime
+        this.velocity.y = this.delta.y / this.input.deltaTime
+        
         if (isScrollX)
-            this.dispatchEvent({ type: 'scrollX', dir: 'x' })
+            this.dispatchEvent({ type: 'scroll', axis: 'x', dir: dirX })
         if (isScrollY)
-            this.dispatchEvent({ type: 'scrollY', dir: 'y' })
+            this.dispatchEvent({ type: 'scroll', axis: 'y', dir: dirY})
+    }
 
-        if (this.option.applyScroll)
-        {
-            window.scroll(
-                this.value.x,
-                this.value.y
-            )
-        }
+    dispose()
+    {
+        window.removeEventListener('wheel', this.wheel)
+        window.removeEventListener('touchstart', this.touch)
+        window.removeEventListener('touchmove', this.touch)
+        window.removeEventListener('touchend', this.touch)
     }
 }

@@ -1,14 +1,14 @@
 import * as THREE from 'three'
-import Viewport from "./Utils/Viewport.ts"
+import Viewport from "./Utils/Viewport"
 import Camera from './Camera.ts'
-import Renderer from './Renderer.ts'
-import World from './World/World.ts'
-import Tweak from './Utils/Tweak.ts'
-import Resources from './Utils/Resources.ts'
-import sources from './sources.ts'
-import Keyboard from './Utils/Keyboard.ts'
-import keyboardInputConf from './keyboardInputConfig.ts'
-import Navigate from './Navigate.ts'
+import Renderer from './Renderer'
+import World from './World/World'
+import Tweak from './Utils/Tweak'
+import Resources from './Utils/Resources'
+import Input from './Utils/Input/Input'
+
+import keyboardInputConfig from './Utils/Input/Config/keyboardInputConfig.ts'
+import sources from './sources'
 
 export default class Game
 {
@@ -17,8 +17,7 @@ export default class Game
     canvas:    HTMLCanvasElement
     tweak:     Tweak
     viewport:  Viewport
-    keyboard:  Keyboard
-    navigate:  Navigate
+    input:     Input
     scene:     THREE.Scene
     camera:    Camera
     renderer:  Renderer
@@ -40,28 +39,18 @@ export default class Game
 
         this.tweak      = new Tweak()
         this.viewport   = new Viewport()
-        this.keyboard   = new Keyboard(keyboardInputConf)
         this.scene      = new THREE.Scene()
         this.camera     = new Camera()
         this.renderer   = new Renderer()
         this.resources  = new Resources(sources)
-        this.navigate   = new Navigate({})
         this.world      = new World()
+        this.input      = Input.getInstance({
+            keyboard: keyboardInputConfig,
+        })
         
-        this.viewport.on('resize',  this.resize)
-        this.renderer.on('update',  this.update)
-        this.navigate.on('scrollX', this.scroll)
-        this.navigate.on('scrollY', this.scroll)
-
-        // Debug
-        if (this.tweak.gui)
-        {
-            const { gui } = this.tweak
-            const guiKeyInput = gui.addFolder({ title: 'Keyboard' })
-            guiKeyInput.expanded = false
-            guiKeyInput.addBinding(this.keyboard, 'pressedKeysStr', { readonly: true })
-        }
-        
+        this.viewport.on('resize',          this.resize)
+        this.renderer.on('update',          this.update)
+        this.input.on('fullscreen:down', this.fullScreen)
     }
 
     resize = () =>
@@ -74,23 +63,18 @@ export default class Game
     {
         this.tweak.fpsMonitorBegin()
         
-        this.navigate.update()
         this.camera.update()
         this.world.update()
 
         this.tweak.fpsMonitorEnd()
     }
 
-    scroll = ({ dir }: { dir: string }) =>
+    fullScreen = () =>
     {
-        if (dir === 'x')
-        {
+        const isFull = document.fullscreenElement
             
-        }
-        if (dir === 'y')
-        {
-            
-        }
+        if (isFull) document.exitFullscreen()
+        else document.documentElement.requestFullscreen()
     }
 
     destory()
@@ -119,16 +103,17 @@ export default class Game
         this.resources.dispose()
         this.camera.controls.dispose()
         this.renderer.instance.dispose()
+        this.input.dispose()
 
         if(this.tweak.gui)
         {
             this.tweak.gui.dispose()
         }
 
-        this.keyboard.dispose()
+        this.input.dispose()
     }
 
-    public static getInstance(canvas?:HTMLCanvasElement): Game
+    public static getInstance(canvas?: HTMLCanvasElement): Game
     {
         if (!Game.instance)
         {
