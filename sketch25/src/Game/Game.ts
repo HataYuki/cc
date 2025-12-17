@@ -6,6 +6,7 @@ import World from './World/World'
 import Tweak from './Utils/Tweak'
 import Resources from './Utils/Resources'
 import Input from './Utils/Input/Input'
+import Sequence from './Sequence/Sequence'
 
 import keyboardInputConfig from './Utils/Input/Config/keyboardInputConfig.ts'
 import sources from './sources'
@@ -17,12 +18,13 @@ export default class Game
     canvas:    HTMLCanvasElement
     tweak:     Tweak
     viewport:  Viewport
-    input:     Input
     scene:     THREE.Scene
     camera:    Camera
     renderer:  Renderer
     resources: Resources
     world:     World
+    input:     Input
+    sequence:  Sequence
 
     private constructor(
         canvas?: HTMLCanvasElement
@@ -47,6 +49,7 @@ export default class Game
         this.input      = Input.getInstance({
             keyboard: keyboardInputConfig,
         })
+        this.sequence   = new Sequence()
         
         this.viewport.on('resize',          this.resize)
         this.renderer.on('update',          this.update)
@@ -63,6 +66,7 @@ export default class Game
     {
         this.tweak.fpsMonitorBegin()
         
+        this.sequence.update()
         this.camera.update()
         this.world.update()
 

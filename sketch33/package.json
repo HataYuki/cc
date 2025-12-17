@@ -1,0 +1,28 @@
+{
+  "name": "sketch30",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@tweakpane/core": "^2.0.5",
+    "@types/three": "^0.181.0",
+    "sass": "^1.93.3",
+    "terser": "^5.44.0",
+    "typescript": "~5.9.3",
+    "vite": "^7.1.7",
+    "vite-plugin-glsl": "^1.5.4"
+  },
+  "dependencies": {
+    "@tweakpane/plugin-essentials": "^0.2.1",
+    "destyle.css": "^4.0.1",
+    "gsap": "^3.14.2",
+    "three": "^0.181.2",
+    "tsl-textures": "^2.5.1",
+    "tweakpane": "^4.0.5"
+  }
+}
