@@ -24,3 +24,13 @@ export const remap = (omin: number, omax: number, dmin: number, dmax: number, x:
     return dmin + (x - omin) * (dmax - dmin) / (omax - omin)
 }
 
+export const clampedRemap = (omin: number, omax: number, dmin: number, dmax: number, x: number) =>
+{
+    return clamp(remap(omin, omax, dmin, dmax, x), dmin, dmax)
+}
+
+export const invertPow = (x: number, y: number) =>
+{
+    return 1.0 - Math.pow(1.0 - x, y)
+}
+

@@ -34,8 +34,9 @@ export default class Resources extends THREE.EventDispatcher<EventMap>
         }
     }
 
-    private initLoader()
+    private initLoader(): Loaders
     {
+        const textureLoader = new THREE.TextureLoader()
         const gltfLoader = new GLTFLoader(this.loadingManager)
         const dracoLoader = new DRACOLoader()
         const ktx2Loader = new KTX2Loader()
@@ -47,6 +48,7 @@ export default class Resources extends THREE.EventDispatcher<EventMap>
         ktx2Loader.detectSupport(this.renderer.instance)
 
         return {
+            texture: textureLoader,
             gltf: gltfLoader,
             ktx2: ktx2Loader
         }

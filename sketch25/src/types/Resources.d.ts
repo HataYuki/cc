@@ -6,7 +6,7 @@ import type { KTX } from 'three/addons/loaders/KTX2Loader.js'
 type __S = typeof import('../Game/sources.ts').default
     
 export type SourceType =
-    // 'texture' |
+    'texture' |
     // 'cubeTexture' |
     'gltf' |
     // 'hdr' |
@@ -14,7 +14,7 @@ export type SourceType =
     
 export interface Loaders {
     gltf: GLTFLoader,
-    // texture: TextureLoader,
+    texture: TextureLoader,
     // cubeTexture: CubeTextureLoader
     // hdr: HDRLoader
     ktx2: KTX2Loader
@@ -23,7 +23,7 @@ export interface Loaders {
 declare global{
     type Datatype<T extends SourceType> =
         T extends 'gltf' ? GLTF :
-        // T extends 'texture' ? Texture<HTMLImageElement> :
+        T extends 'texture' ? Texture<HTMLImageElement> :
         // T extends 'cubeTexture' ? CubeTexture :
         // T extends 'hdr' ? HDR :
         T extends 'ktx2' ? KTX :
