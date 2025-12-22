@@ -49,7 +49,7 @@ export default class Fox
     {
         const model = this.resource.scene
         model.scale.set(0.02, 0.02, 0.02)
-        model.traverse(child =>
+        model.traverse((child: THREE.Object3D) =>
         {
             if(child instanceof THREE.Mesh)
             {

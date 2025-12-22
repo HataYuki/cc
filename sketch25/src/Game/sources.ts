@@ -2,18 +2,6 @@ import type { Sources } from "../types/Resources"
 
 export default
 [
-    // {
-    //     name: 'environmentMapTexture',
-    //     type: 'cubeTexture',
-    //     path: [
-    //         'textures/environmentMap/px.jpg',
-    //         'textures/environmentMap/nx.jpg',
-    //         'textures/environmentMap/py.jpg',
-    //         'textures/environmentMap/ny.jpg',
-    //         'textures/environmentMap/pz.jpg',
-    //         'textures/environmentMap/nz.jpg',
-    //     ]
-    // },
         {
             name: 'envTextureKtx', type: 'ktx2', path: 'textures/environmentMap/resized_2k.ktx2'
         },

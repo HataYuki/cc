@@ -77,7 +77,7 @@ export default class Resources extends THREE.EventDispatcher<EventMap>
         return this.items[name]
     }
 
-    load<const T extends SourceNames[]>(...names: T) {
+    load<T extends SourceNames[]>(...names: T) {
 
         const tasks = names.map(async name => this.startLoad(name)) as { [K in keyof T]: Promise<Items[T[K]]> }
 

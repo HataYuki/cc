@@ -37,7 +37,7 @@ interface Source<T extends SourceType> {
     path: T extends 'cubeTexture' ? string[] : string
 }
 
-export type Sources = Source<SourceType>[]
+export type Sources = readonly Source<SourceType>[]
 
 export type SourceNames = __S[number]['name']
 

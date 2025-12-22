@@ -1,7 +1,7 @@
-import Experience from '../Game.ts';
-import Environment from './Environment.ts';
-import Floor from "./Floor.ts";
-import Fox from "./Fox.ts";
+import Experience from '../Game';
+import Environment from './Environment';
+import Floor from "./Floor";
+import Fox from "./Fox";
 
 export default class World
 {

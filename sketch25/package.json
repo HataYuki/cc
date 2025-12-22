@@ -16,7 +16,7 @@
     "rollup-plugin-visualizer": "^6.0.5",
     "sass": "^1.93.3",
     "terser": "^5.44.0",
-    "typescript": "~5.9.3",
+    "typescript": "^5.9.3",
     "vite": "^7.1.7",
     "vite-plugin-glsl": "^1.5.5"
   },
