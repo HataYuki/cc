@@ -8,11 +8,11 @@ export type CursorEvents = { [N in CursorEventNames] : { _: undefined } }
 export default class Cursor extends THREE.EventDispatcher<CursorEvents>
 {
     private input:Input
-    private __value: Pos<number> = { x: 0, y: 0 }
+    private actialPosition: Pos<number> = { x: 0, y: 0 }
     private moved = false
     private eventTypeTouch = false
 
-    value: Pos<number> = { x: 0, y: 0 }
+    private position: Pos<number> = { x: 0, y: 0 }
     delta: Pos<number> = { x: 0, y: 0 }
     velocity: Pos<number> = { x: 0, y: 0 }
 
@@ -26,6 +26,22 @@ export default class Cursor extends THREE.EventDispatcher<CursorEvents>
 
         window.addEventListener('pointermove', this.pointer)
         window.addEventListener('touchmove', this.pointer)
+    }
+    
+    get value()
+    {
+        return {
+            x: this.position.x,
+            y: this.position.y
+        }    
+    }
+    
+    get normalized()
+    {
+        return {
+            x: (this.position.x / window.innerWidth) * 2 - 1,
+            y: -1 * ((this.position.y / window.innerHeight) * 2 - 1)
+        }
     }
 
     private damp(
@@ -82,7 +98,12 @@ export default class Cursor extends THREE.EventDispatcher<CursorEvents>
 
     pointer = (event: PointerEvent | TouchEvent) =>
     {
-        let e = (event instanceof TouchEvent) ? event.changedTouches[0] : event
+        let e = (
+                typeof TouchEvent !== 'undefined' &&
+                event instanceof TouchEvent
+            ) 
+            ? event.changedTouches[0] 
+            : event
 
         if (event.type === 'touchmove')
         {
@@ -95,10 +116,11 @@ export default class Cursor extends THREE.EventDispatcher<CursorEvents>
             window.removeEventListener('touchend', this.touchend)
         }
         
-        const { clientX, clientY } = e
-
-        this.__value.x = clientX
-        this.__value.y = clientY
+        if('clientX' in e && 'clientY' in e)
+        {
+            this.actialPosition.x = e.clientX
+            this.actialPosition.y = e.clientY
+        }    
     }
 
     touchend = () =>
@@ -110,26 +132,27 @@ export default class Cursor extends THREE.EventDispatcher<CursorEvents>
     }
  
     update()
-    {
+    {   
+        // const value = {x:0, y:0}
         const isMoveX = this.damp(
-            this.value,
+            this.position,
             'x',
-            this.__value.x,
+            this.actialPosition.x,
             0.5,
             this.input.deltaTime,
             Infinity
         )
         const isMoveY = this.damp(
-            this.value,
+            this.position,
             'y',
-            this.__value.y,
+            this.actialPosition.y,
             0.5,
             this.input.deltaTime,
             Infinity
         )
 
-        this.delta.x = this.__value.x - this.value.x
-        this.delta.y = this.__value.y - this.value.y
+        this.delta.x = this.actialPosition.x - this.position.x
+        this.delta.y = this.actialPosition.y - this.position.y
 
         this.velocity.x = this.delta.x / this.input.deltaTime    
         this.velocity.y = this.delta.y / this.input.deltaTime

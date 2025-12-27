@@ -56,7 +56,7 @@ export default class Fox
                 child.castShadow = true
             }
         })
-
+        
         this.scene.add(model)
 
         return model

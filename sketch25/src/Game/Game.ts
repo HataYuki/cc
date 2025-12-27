@@ -22,9 +22,9 @@ export default class Game
     camera:    Camera
     renderer:  Renderer
     resources: Resources
-    world:     World
     input:     Input
     sequence:  Sequence
+    world:     World
 
     private constructor(
         canvas?: HTMLCanvasElement
@@ -45,11 +45,11 @@ export default class Game
         this.camera     = new Camera()
         this.renderer   = new Renderer()
         this.resources  = new Resources(sources)
-        this.world      = new World()
         this.input      = Input.getInstance({
             keyboard: keyboardInputConfig,
         })
         this.sequence   = new Sequence()
+        this.world      = new World()
         
         this.viewport.on('resize',          this.resize)
         this.renderer.on('update',          this.update)

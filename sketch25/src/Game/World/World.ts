@@ -1,4 +1,5 @@
 import Experience from '../Game';
+import CameraRay from './CameraRay'
 import Environment from './Environment';
 import Floor from "./Floor";
 import Fox from "./Fox";
@@ -7,6 +8,7 @@ export default class World
 {
     experience: Experience
     resources: IResources
+    cameraRay: CameraRay
     environment: Nullable<Environment> = null
     floor: Nullable<Floor> = null
     fox: Nullable<Fox> = null
@@ -14,6 +16,7 @@ export default class World
     {
         this.experience = Experience.getInstance()
         this.resources = this.experience.resources
+        this.cameraRay = new CameraRay()
 
         this.resources.load(
             'foxModel',
@@ -33,12 +36,14 @@ export default class World
     {
         if (this.fox)
             this.fox.update()
+            
+        this.cameraRay.update()
     }
     
     dispose()
     {
         if (this.environment)
-            this.environment?.dispose()
+            this.environment.dispose()
         if (this.fox)
             this.fox.dispose()
         if (this.floor)

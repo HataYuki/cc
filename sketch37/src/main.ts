@@ -64,7 +64,7 @@ pane.on('change', () =>
  * Camera
  */
 const camera = new THREE.PerspectiveCamera(75, aspect, 0.01, 100)
-camera.position.set(0.8, 0.8, 0.8)
+camera.position.set(1.2, 1.2, 1.2)
 scene.add(camera)
 pane.addBinding(camera.position, 'x', { readonly: true })
 pane.addBinding(camera.position, 'y', { readonly: true })

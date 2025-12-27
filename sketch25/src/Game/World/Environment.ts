@@ -59,7 +59,7 @@ export default class Environment
         const helper = new THREE.CameraHelper(
             this.sunLight.shadow.camera
         )
-        this.scene.add(helper)
+        // this.scene.add(helper)
 
         return helper
     }
