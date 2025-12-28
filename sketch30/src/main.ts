@@ -239,10 +239,10 @@ directionalLight.shadow.normalBias = 0.032
 directionalLight.shadow.bias = 0.001
 
 // Helper
-// const directionalLightHelper = new THREE.CameraHelper(
-//   directionalLight.shadow.camera
-// )
-// scene.add(directionalLightHelper)
+const directionalLightHelper = new THREE.CameraHelper(
+  directionalLight.shadow.camera
+)
+scene.add(directionalLightHelper)
 
 
 /**
