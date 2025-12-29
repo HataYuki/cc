@@ -10,9 +10,10 @@ import { HDRLoader } from 'three/addons/loaders/HDRLoader.js'
 import { Pane } from 'tweakpane'
 import * as EssentialsPlugin from '@tweakpane/plugin-essentials'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
+import { Brush, Evaluator, SUBTRACTION } from 'three-bvh-csg'
 import CustomShaderMaterial from 'three-custom-shader-material/vanilla'
-import slicedVertexShader from './shaders/sliced/vertex.glsl'
-import slicedFragmentShader from './shaders/sliced/fragment.glsl'
+import terrainVertexShader from './shaders/terrain/vertex.glsl'
+import terrainFragmentShader from './shaders/terrain/fragment.glsl'
 // import gsap from 'gsap'
 
 /**
@@ -51,7 +52,7 @@ gltfLoader.setDRACOLoader(dracoLoader)
 /**
  * LoadTexture
  */
-const envMap = await hdrLoader.loadAsync('environmentmap/urban_alley/urban_alley_01_1k.hdr')
+const envMap = await hdrLoader.loadAsync('environmentmap/spruit_sunrise/spruit_sunrise.hdr')
 
 /**
  * Scene
@@ -69,7 +70,7 @@ scene.backgroundBlurriness = 0.3
  * Camera
  */
 const camera = new THREE.PerspectiveCamera(75, aspect, 0.01, 100)
-camera.position.set(1.15,2.86,5.24)
+camera.position.set(-6.52, 4.82, -1.48)
 scene.add(camera)
 pane.addBinding(camera.position, 'x', { readonly: true, label: 'cam X'})
 pane.addBinding(camera.position, 'y', { readonly: true, label: 'cam Y'})
@@ -101,119 +102,136 @@ pane.addBinding(renderer.info.memory, 'textures', { readonly: true })
 
 
 /**
- * Model
+ * Terrain
  */
-// Uniforms
-const uniforms = {
-  uSliceStart: new THREE.Uniform(1.75),
-  uSliceArc: new THREE.Uniform(1.25)
-} 
-
-pane.addBinding(uniforms.uSliceStart, 'value', { min: -Math.PI, max: Math.PI, step: 0.001, label: 'uSliceStart'})
-pane.addBinding(uniforms.uSliceArc, 'value', { min: 0, max: Math.PI * 2, step: 0.001, label: 'uSliceArc' })
-
-const pathMap =
+// Color 
+const color =
 {
-  csm_Slice:
-  {
-    '#include <colorspace_fragment>':
-      `
-      #include <colorspace_fragment>
-
-      if(!gl_FrontFacing)
-        gl_FragColor = vec4(0.75, 0.15, 0.3, 1.0);
-      `
-  }
+  colorWaterDeep:'#002b3d',
+  colorWaterSurface:'#66a8ff',
+  colorSand:'#ffe894',
+  colorGrass:'#85d534',
+  colorSnow:'#ffffff',
+  colorRock:'#bfbd8d',
 }
 
-// Material
-const material = new THREE.MeshStandardMaterial({
-  metalness: 0.5,
-  roughness: 0.25,
-  envMapIntensity: 0.5,
-  color:'#858080'
+// Uniforms
+const uniforms = 
+{
+  uTime: new THREE.Uniform(0),
+  uPositionFrequency: new THREE.Uniform(0.2),
+  uStrength: new THREE.Uniform(2.0),
+  uWarpFrequency: new THREE.Uniform(5),
+  uWarpStrength: new THREE.Uniform(0.5),
+  // Color
+  uColorWaterDeep:new THREE.Uniform(new THREE.Color(color.colorWaterDeep)),
+  uColorWaterSurface:new THREE.Uniform(new THREE.Color(color.colorWaterSurface)),
+  uColorSand:new THREE.Uniform(new THREE.Color(color.colorSand)),
+  uColorGrass:new THREE.Uniform(new THREE.Color(color.colorGrass)),
+  uColorSnow:new THREE.Uniform(new THREE.Color(color.colorSnow)),
+  uColorRock:new THREE.Uniform(new THREE.Color(color.colorRock)),
+}
+
+pane.addBinding(uniforms.uPositionFrequency, 'value', {label:'uPositionFrequency',min:0,max:1, step:0.001})
+pane.addBinding(uniforms.uStrength, 'value', {label:'uStrength',min:0,max:10, step:0.001})
+pane.addBinding(uniforms.uWarpFrequency, 'value', {label:'uWarpFrequency',min:0,max:10, step:0.001})
+pane.addBinding(uniforms.uWarpStrength, 'value', {label:'uWarpStrength', min: 0, max: 1, step: 0.001 })
+
+pane.addBinding(color, 'colorWaterDeep', {view:'hex'})
+pane.addBinding(color, 'colorWaterSurface', {view:'hex'})
+pane.addBinding(color, 'colorSand', {view:'hex'})
+pane.addBinding(color, 'colorGrass', {view:'hex'})
+pane.addBinding(color, 'colorSnow', {view:'hex'})
+pane.addBinding(color, 'colorRock', { view: 'hex' })
+pane.on('change', () =>
+{
+  uniforms.uColorWaterDeep.value.set(color.colorWaterDeep)
+  uniforms.uColorWaterSurface.value.set(color.colorWaterSurface)
+  uniforms.uColorSand.value.set(color.colorSand)
+  uniforms.uColorGrass.value.set(color.colorGrass)
+  uniforms.uColorSnow.value.set(color.colorSnow)
+  uniforms.uColorRock.value.set(color.colorRock)
 })
 
-const slicedMaterial = new CustomShaderMaterial({
+// Geometry
+const geometry = new THREE.PlaneGeometry(10, 10, 500, 500)
+geometry.deleteAttribute('uv')
+geometry.deleteAttribute('normal')
+geometry.rotateX(-Math.PI / 2)
+
+// Material
+const material = new CustomShaderMaterial({
   // CSM
   baseMaterial: THREE.MeshStandardMaterial,
-  vertexShader: slicedVertexShader,
-  fragmentShader: slicedFragmentShader,
+  vertexShader:terrainVertexShader,
+  fragmentShader: terrainFragmentShader,
   uniforms: uniforms,
-  patchMap: pathMap,
-
   // MeshStandardMaterial
-  metalness: 0.5,
-  roughness: 0.25,
-  envMapIntensity: 0.5,
-  color: '#858080',
-  side: THREE.DoubleSide
+  metalness: 0,
+  roughness: 0.5,
+  color:'#85d534'
 })
 
-const depthSlicedMaterial = new CustomShaderMaterial({
+const depthMaterial = new CustomShaderMaterial({
   // CSM
   baseMaterial: THREE.MeshDepthMaterial,
-  vertexShader: slicedVertexShader,
-  fragmentShader: slicedFragmentShader,
+  vertexShader:terrainVertexShader,
+  // fragmentShader: terrainFragmentShader,
   uniforms: uniforms,
-  patchMap: pathMap,
-
   // MeshStandardMaterial
   depthPacking: THREE.RGBADepthPacking
 })
 
-let model:null | THREE.Object3D = null
-gltfLoader.load('models/gears/gears.glb',(gltf) => {
-  model = gltf.scene
-  model.traverse((child) => {
-    if (child instanceof THREE.Mesh)
-    {
-      if (child.name === 'outerHull')
-      {
-        child.material = slicedMaterial
-        child.customDepthMaterial = depthSlicedMaterial
-      }
-      else {
-        child.material = material
-      }
-      child.receiveShadow = true
-      child.castShadow = true
-    }
+// Mesh
+const terrain = new THREE.Mesh(geometry, material)
+terrain.customDepthMaterial = depthMaterial
+terrain.receiveShadow = true
+terrain.castShadow = true
+scene.add(terrain)
+
+/**
+ * Water
+ */
+const water = new THREE.Mesh(
+  new THREE.PlaneGeometry(10,10,1,1),
+  new THREE.MeshPhysicalMaterial({
+    transmission: 1.0,
+    roughness: 0.3
   })
-  scene.add(model)
-})
-
-
-const planeMaterial = new THREE.MeshStandardMaterial()
-const planeGeometry = new THREE.PlaneGeometry(6,6)
-const planeMesh = new THREE.Mesh(planeGeometry, planeMaterial)
-planeMesh.receiveShadow = true
-planeMesh.position.set(-4, 0, 0)
-planeMesh.quaternion.setFromEuler(
-  new THREE.Euler(
-    - Math.PI / 8,
-    Math.PI / 2,
-    0,
-    'YZX'
-  )
 )
+water.position.y = -0.1
+water.rotation.x = -Math.PI / 2;
+scene.add(water)
 
-scene.add(planeMesh)
+/**
+ * Board
+ */
+// Brushes
+const boardFill = new Brush(new THREE.BoxGeometry(11, 2, 11))
+const boardHole = new Brush(new THREE.BoxGeometry(10, 2.1, 10))
 
+// Evaluate
+const evaluator = new Evaluator()
+const board = evaluator.evaluate(boardFill, boardHole, SUBTRACTION)
+board.geometry.clearGroups()
+board.material = new THREE.MeshStandardMaterial({ color: '#ffffff', metalness: 0.0, roughness: 0.3 })
+board.castShadow = true
+board.receiveShadow = true
+scene.add(board)
 
 /**
  * Directional light
  */
-const directionalLight = new THREE.DirectionalLight('#ffffff', 6)
-directionalLight.position.set(3, 0.5, 0)
+const directionalLight = new THREE.DirectionalLight('#ffffff', 4)
+directionalLight.position.set(1, 5, 3)
 // Shadows
 directionalLight.castShadow = true
 directionalLight.shadow.camera.near = 0.01
-directionalLight.shadow.camera.far = 10
-directionalLight.shadow.camera.left = -6
-directionalLight.shadow.camera.right = 6
-directionalLight.shadow.camera.top = -6
-directionalLight.shadow.camera.bottom = 6
+directionalLight.shadow.camera.far = 20
+directionalLight.shadow.camera.left = -12
+directionalLight.shadow.camera.right = 12
+directionalLight.shadow.camera.top = -12
+directionalLight.shadow.camera.bottom = 12
 
 const shadowMapSize = Math.pow(2,12)
 directionalLight.shadow.mapSize.set(shadowMapSize, shadowMapSize)
@@ -269,8 +287,8 @@ const tick = () => {
   const deltaTime = clock.getDelta()
   const elapsedTime = clock.getElapsedTime()
 
-  if (model)
-    model.rotation.y = elapsedTime * 0.1;
+  // Update uniform
+  uniforms.uTime.value = elapsedTime;
   
   // Update controls
   controls.update()
