@@ -70,7 +70,7 @@ scene.environment = envMap
  * Camera
  */
 const camera = new THREE.PerspectiveCamera(75, aspect, 0.01, 100)
-camera.position.set(3.26, 0.64, -1.31)
+camera.position.set(8.78, 0.11, -1.60)
 scene.add(camera)
 pane.addBinding(camera.position, 'x', { readonly: true, label: 'cam X'})
 pane.addBinding(camera.position, 'y', { readonly: true, label: 'cam Y'})
@@ -105,8 +105,8 @@ pane.addBinding(renderer.info.memory, 'textures', { readonly: true })
  * Model
  */
 const color = {
-  colorA: '#ff0000',
-  colorB: '#0000ff'
+  colorB: '#ff0000',
+  colorA: '#0000ff'
 }
 const uniforms = {
   uTime: new THREE.Uniform(0),
@@ -145,7 +145,7 @@ const depthSphereMaterial:THREE.MeshDepthMaterial = new CustomShaderMaterial({
   // CSM
   baseMaterial: THREE.MeshDepthMaterial,
   vertexShader: wobbleVertexShader,
-  fragmentShader: wobbleFragmentShader,
+  // fragmentShader: wobbleFragmentShader,
   uniforms:uniforms,
 
   // MeshDepthMaterial
@@ -168,31 +168,31 @@ pane.on('change', () => {
   uniforms.uColorB.value.set(color.colorB)
 })
 
-// // Geometry
-// let sphereGeometry = new THREE.IcosahedronGeometry(1, 64)
-// sphereGeometry = mergeVertices(sphereGeometry) as THREE.IcosahedronGeometry
-// sphereGeometry.computeTangents()
+// Geometry
+let sphereGeometry = new THREE.IcosahedronGeometry(2.5, 50)
+sphereGeometry = mergeVertices(sphereGeometry) as THREE.IcosahedronGeometry
+sphereGeometry.computeTangents()
 
-// // Mesh
-// const mesh = new THREE.Mesh(sphereGeometry, sphereMaterial)
-// mesh.customDepthMaterial = depthSphereMaterial
-// mesh.castShadow = true
-// mesh.receiveShadow = true
-// scene.add(mesh)
+// Mesh
+const mesh = new THREE.Mesh(sphereGeometry, sphereMaterial)
+mesh.customDepthMaterial = depthSphereMaterial
+mesh.castShadow = true
+mesh.receiveShadow = true
+scene.add(mesh)
 
-gltfLoader.load('models/monkey/suzanne.glb', gltf =>
-{
-  const wobble = gltf.scene.children[0]
-  if (wobble instanceof THREE.Mesh)
-  {
-    wobble.scale.set(0.5, 0.5, 0.5)
-    wobble.receiveShadow = true
-    wobble.castShadow = true
-    wobble.material = sphereMaterial
-    wobble.customDepthMaterial = depthSphereMaterial
-  }
-  scene.add(wobble)
-})
+// gltfLoader.load('models/monkey/suzanne.glb', gltf =>
+// {
+//   const wobble = gltf.scene.children[0]
+//   if (wobble instanceof THREE.Mesh)
+//   {
+//     wobble.scale.set(0.5, 0.5, 0.5)
+//     wobble.receiveShadow = true
+//     wobble.castShadow = true
+//     wobble.material = sphereMaterial
+//     wobble.customDepthMaterial = depthSphereMaterial
+//   }
+//   scene.add(wobble)
+// })
    
 pane.addBinding(sphereMaterial, 'metalness', { min: 0, max:1, step:0.01})
 pane.addBinding(sphereMaterial, 'roughness', { min: 0, max: 1, step: 0.01 })
@@ -202,10 +202,10 @@ pane.addBinding(sphereMaterial, 'thickness', { min: 0, max: 2.333, step: 0.01 })
 
 
 const planeMaterial = new THREE.MeshPhysicalMaterial()
-const planeGeometry = new THREE.PlaneGeometry(3,3)
+const planeGeometry = new THREE.PlaneGeometry(6,6)
 const planeMesh = new THREE.Mesh(planeGeometry, planeMaterial)
 planeMesh.receiveShadow = true
-planeMesh.position.set(0, -1.5, 2)
+planeMesh.position.set(0, -0.5, 4)
 planeMesh.rotation.y = Math.PI
 scene.add(planeMesh)
 
@@ -218,11 +218,11 @@ directionalLight.position.set(0, 2, -3)
 // Shadows
 directionalLight.castShadow = true
 directionalLight.shadow.camera.near = 0.01
-directionalLight.shadow.camera.far = 7
-directionalLight.shadow.camera.left = -3
-directionalLight.shadow.camera.right = 3
-directionalLight.shadow.camera.top = -3
-directionalLight.shadow.camera.bottom = 3
+directionalLight.shadow.camera.far = 10
+directionalLight.shadow.camera.left = -6
+directionalLight.shadow.camera.right = 6
+directionalLight.shadow.camera.top = -6
+directionalLight.shadow.camera.bottom = 6
 
 const shadowMapSize = Math.pow(2,12)
 directionalLight.shadow.mapSize.set(shadowMapSize, shadowMapSize)
@@ -236,7 +236,7 @@ const directionalLightHelper = new THREE.CameraHelper(
   directionalLight.shadow.camera
 )
 
-// scene.add(directionalLightHelper)
+scene.add(directionalLightHelper)
 
 
 /**
